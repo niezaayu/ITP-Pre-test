@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOEFL ITP® Listening Mock Test - Official Audio Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono-code { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- TOP HEADER / EXAM BAR -->
+  <header class="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="bg-indigo-600 font-black text-xs px-2.5 py-1 rounded tracking-wider uppercase flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-headphones"></i>
+          <span>TOEFL ITP®</span>
+        </div>
+        <div>
+          <h1 class="text-sm sm:text-base font-bold flex items-center gap-2">
+            Section 1: Listening Comprehension
+            <span class="text-xs bg-indigo-950 text-indigo-300 border border-indigo-700/60 px-2 py-0.5 rounded-full font-medium">
+              Single-Listen Standard
+            </span>
+          </h1>
+          <p class="text-xs text-slate-400">25 Questions &bull; Continuous Exam Audio</p>
+        </div>
+      </div>
+
+      <!-- TIMER, AUDIO STATUS & SUBMIT -->
+      <div class="flex items-center gap-3 ml-auto">
+        <!-- Audio Source Indicator -->
+        <div id="audioSourceIndicator" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-800 border border-slate-700 text-slate-300">
+          <span id="audioLed" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="audioStatusText">Voice Synthesizer Fallback</span>
+        </div>
+
+        <!-- Section Timer -->
+        <div id="timerBox" class="flex items-center gap-1.5 bg-slate-800 border border-slate-700 px-3 py-1 rounded-lg text-sm font-mono-code font-bold text-amber-300">
+          <i class="fa-regular fa-clock text-slate-400"></i>
+          <span id="timerText">35:00</span>
+        </div>
+
+        <button onclick="finishExam()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-lg transition shadow-sm">
+          Submit Exam
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MASTER AUDIO CONTROLLER BAR (NO PER-QUESTION REPLAY, NO SCRUBBING) -->
+  <section class="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 shadow-sm sticky top-[57px] z-40">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      
+      <!-- File Loader and Continuous Master Player -->
+      <div class="w-full md:w-auto flex flex-wrap items-center gap-3">
+        <!-- File Picker for "Audio listening quiz.mp3" -->
+        <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 border border-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 flex items-center gap-2 transition">
+          <i class="fa-solid fa-folder-open text-indigo-600"></i>
+          <span id="fileLabel">Load "Audio listening quiz.mp3"</span>
+          <input type="file" id="audioFileInput" accept="audio/*" class="hidden" onchange="handleAudioFileSelect(event)">
+        </label>
+
+        <!-- Master Play Button -->
+        <button id="masterPlayBtn" onclick="toggleMasterAudio()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition shadow-sm">
+          <i id="playIcon" class="fa-solid fa-play"></i>
+          <span id="playText">Start Exam Audio</span>
+        </button>
+      </div>
+
+      <!-- Scrubber (Disabled / Read-Only to Enforce Single Listen) & Volume -->
+      <div class="w-full md:w-5/12 flex items-center gap-3">
+        <span id="currentTimeLabel" class="text-xs font-mono-code text-slate-500">00:00</span>
+        <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+          <div id="audioProgressBar" class="bg-indigo-600 h-full w-0 transition-all duration-300"></div>
+        </div>
+        <span id="durationLabel" class="text-xs font-mono-code text-slate-500">--:--</span>
+
+        <!-- Volume Slider -->
+        <div class="hidden lg:flex items-center gap-1.5 text-slate-500 ml-1">
+          <i class="fa-solid fa-volume-low text-xs"></i>
+          <input type="range" id="volumeControl" min="0" max="1" step="0.05" value="1" 
+                 class="w-16 h-1.5 bg-slate-200 rounded appearance-none cursor-pointer" 
+                 oninput="setAudioVolume(this.value)">
+        </div>
+      </div>
+    </div>
+
+    <!-- STRICT PLAY-ONCE EXAM NOTICE -->
+    <div class="max-w-7xl mx-auto mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-amber-700 font-medium">
+      <div class="flex items-center gap-1.5">
+        <i class="fa-solid fa-shield-halved text-amber-600"></i>
+        <span><strong>Official Exam Policy:</strong> Audio plays through once in real time. Individual question replay is disabled to match ETS testing regulations.</span>
+      </div>
+      <span class="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-0.5 rounded font-bold">
+        Single Listen Enforced
+      </span>
+    </div>
+  </section>
+
+  <!-- HIDDEN AUDIO ELEMENT -->
+  <audio id="examAudioPlayer" preload="auto"></audio>
+
+  <!-- MAIN TEST INTERFACE -->
+  <main id="testWorkspace" class="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 flex-1 flex flex-col gap-6">
+
+    <!-- DIRECTIONS BANNER -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm text-xs sm:text-sm text-slate-700 flex flex-col gap-2">
+      <div class="flex items-center justify-between">
+        <span class="font-bold text-indigo-700 uppercase tracking-wider text-xs flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-info"></i> Section Directions
+        </span>
+        <span class="text-xs text-slate-400 font-mono-code">25 Items &bull; 35 Minutes</span>
+      </div>
+      <p class="leading-relaxed">
+        Listen to the conversations and talks on the master audio track. After each conversation, you will hear a question. Read the four possible answers and choose the best one. <strong>Conversations and questions are not repeated.</strong>
+      </p>
+    </div>
+
+    <!-- TWO COLUMN TEST DISPLAY -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
+
+      <!-- LEFT: AUDIO STATUS / LIVE SOUND MONITOR (5 Cols) -->
+      <section class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between min-h-[420px]">
+        <div>
+          <!-- Part Header -->
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            <div class="flex items-center gap-2">
+              <span id="partBadge" class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold px-2.5 py-1 rounded-md">
+                Part A
+              </span>
+              <span id="partTypeLabel" class="text-xs text-slate-500 font-medium">Short Dialogue</span>
+            </div>
+            <span class="text-xs font-mono-code text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+              Standard Audio Stream
+            </span>
+          </div>
+
+          <!-- SOUND MONITOR CARD -->
+          <div class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-2xl p-6 text-center space-y-4 shadow-inner relative overflow-hidden">
+            <div id="playingAnimation" class="hidden flex items-center justify-center gap-1 py-4">
+              <span class="w-1.5 h-6 bg-indigo-400 rounded-full animate-bounce"></span>
+              <span class="w-1.5 h-10 bg-indigo-300 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
+              <span class="w-1.5 h-14 bg-indigo-200 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+              <span class="w-1.5 h-8 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0.3s"></span>
+              <span class="w-1.5 h-12 bg-indigo-300 rounded-full animate-bounce" style="animation-delay: 0.15s"></span>
+            </div>
+
+            <div id="idleAnimation" class="w-16 h-16 mx-auto rounded-full bg-indigo-800/40 border border-indigo-600 flex items-center justify-center text-indigo-300">
+              <i class="fa-solid fa-volume-high text-2xl"></i>
+            </div>
+
+            <div class="space-y-1">
+              <h3 id="stimulusHeadline" class="text-base font-bold text-white">Listening Section In Progress</h3>
+              <p id="stimulusSubtext" class="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+                Audio is played through once from the master bar. Answer the questions as the exam progresses.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between">
+          <span>Official TOEFL ITP Format</span>
+          <span>No Individual Replay Allowed</span>
+        </div>
+      </section>
+
+      <!-- RIGHT: PURE QUESTION CARD & PALETTE (7 Cols) -->
+      <section class="lg:col-span-7 flex flex-col gap-5">
+
+        <!-- QUESTION CARD: ONLY NUMBER, INSTRUCTION, 4 OPTIONS & NAVIGATION -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col">
+          <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+            <span id="questionNumLabel" class="text-xs font-bold uppercase tracking-wider text-indigo-600">
+              Question 1 of 25
+            </span>
+
+            <button id="flagBtn" onclick="toggleFlagCurrentQuestion()" class="text-xs font-semibold px-2.5 py-1 rounded-md border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300 flex items-center gap-1.5 transition">
+              <i class="fa-regular fa-bookmark"></i>
+              <span id="flagBtnText">Flag Question</span>
+            </button>
+          </div>
+
+          <!-- DIRECTIONS PROMPT -->
+          <h2 class="text-sm font-semibold text-slate-700 mb-4">
+            Choose the one best answer to the question you heard:
+          </h2>
+
+          <!-- FOUR MULTIPLE CHOICE OPTIONS (A, B, C, D) -->
+          <div id="optionsContainer" class="space-y-2.5">
+            <!-- Dynamically injected -->
+          </div>
+
+          <!-- BOTTOM CONTROLS: PREVIOUS, NEXT, FINISH (NO AUDIO CONTROLS) -->
+          <div class="flex items-center justify-between mt-6 pt-4 border-t border-slate-100">
+            <button id="prevBtn" onclick="goToPrevQuestion()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+              <i class="fa-solid fa-chevron-left mr-1"></i> Previous
+            </button>
+            <button id="nextBtn" onclick="goToNextQuestion()" class="px-5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-sm">
+              <span>Next Question</span> <i class="fa-solid fa-chevron-right ml-1"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 25-ITEM PALETTE -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div class="flex items-center justify-between mb-3 text-xs">
+            <span class="font-bold uppercase tracking-wider text-slate-500">Question Palette</span>
+            <span id="answeredCounter" class="text-slate-500 font-medium">0 / 25 Answered</span>
+          </div>
+
+          <div id="paletteGrid" class="grid grid-cols-5 gap-2">
+            <!-- Dynamically generated -->
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-indigo-600 inline-block"></span> Answered</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-slate-200 inline-block"></span> Unanswered</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-amber-500 inline-block"></span> Flagged</span>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- POST-TEST DIAGNOSTIC RESULTS REPORT (Hidden Initially) -->
+  <section id="resultsSection" class="hidden max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 space-y-6 flex-1">
+    
+    <!-- CERTIFICATE HEADER -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-indigo-900 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-widest text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-800">
+          Listening Diagnostic Report
+        </span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold mt-3">
+          Listening Score: <span id="resScaledScore" class="text-amber-400">--</span> / 68
+        </h2>
+        <p class="text-sm text-slate-300 mt-1">
+          Raw Score: <span id="resRawScore" class="font-bold text-white">--</span> of 25 items correct &bull; CEFR Level: <span id="resCefr" class="font-bold text-emerald-400">--</span>
+        </p>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-slate-700 transition">
+          <i class="fa-solid fa-print mr-1.5"></i> Print Summary
+        </button>
+        <button onclick="restartExam()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl transition shadow">
+          <i class="fa-solid fa-rotate-right mr-1.5"></i> Retake Test
+        </button>
+      </div>
+    </div>
+
+    <!-- DETAILED AUDIT WITH SPOKEN TRANSCRIPTS -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      <div class="border-b border-slate-100 pb-4 mb-6">
+        <h3 class="text-lg font-bold text-slate-900">Transcript & Explanation Breakdown</h3>
+        <p class="text-xs text-slate-500">Review the spoken dialogue transcripts, correct answer keys, and pedagogical explanations.</p>
+      </div>
+
+      <div id="resultsList" class="space-y-6">
+        <!-- Dynamically injected -->
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="mt-auto border-t border-slate-200 bg-white py-3 px-4 text-center text-xs text-slate-500">
+    TOEFL ITP® Listening Mock Test &bull; Single-Play Master Audio Edition
+  </footer>
+
+  <!-- DATA & LOGIC -->
+  <script>
+    const QUESTIONS = [
+      {
+        id: 1,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Man", text: "I think we should submit the essay now, we won't have another time since we have public policy and comparative politics today." },
+          { speaker: "Woman", text: "Yeah, we've got a lot on our plate today." },
+          { speaker: "Narrator", text: "What does the woman imply?" }
+        ],
+        spokenQuestion: "What does the woman imply?",
+        options: [
+          "A) They should eat lunch before submitting the essay.",
+          "B) They are extremely busy with multiple classes and assignments today.",
+          "C) Their public policy class was canceled.",
+          "D) They have plenty of time left later this evening."
+        ],
+        correct: 1,
+        explanation: "The idiom 'have a lot on our plate' means having a very large amount of work or commitments to handle."
+      },
+      {
+        id: 2,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Woman", text: "You really can't throw well. I don't think you can be on the team unless you improve." },
+          { speaker: "Man", text: "I'm afraid I'm very bad at playing sports." },
+          { speaker: "Narrator", text: "What does the man imply?" }
+        ],
+        spokenQuestion: "What does the man imply?",
+        options: [
+          "A) He expects to practice and make the team.",
+          "B) He agrees that he has poor athletic ability.",
+          "C) He thinks the woman is an unfair coach.",
+          "D) He prefers soccer over baseball."
+        ],
+        correct: 1,
+        explanation: "The man admits 'I'm afraid I'm very bad at playing sports', acknowledging his lack of athletic skill."
+      },
+      {
+        id: 3,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Man", text: "Did you see the manager about the job in the bookstore?" },
+          { speaker: "Woman", text: "Yes, and I also had to fill out an application for further interviews." },
+          { speaker: "Narrator", text: "What does the woman mean?" }
+        ],
+        spokenQuestion: "What does the woman mean?",
+        options: [
+          "A) She was hired immediately without an interview.",
+          "B) The bookstore is no longer accepting workers.",
+          "C) She completed an application form for the next hiring round.",
+          "D) She decided not to apply for the bookstore position."
+        ],
+        correct: 2,
+        explanation: "She met the manager and filled out the application required for subsequent interviews."
+      },
+      {
+        id: 4,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Woman", text: "Were you able to get into that calculus class?" },
+          { speaker: "Man", text: "Yeah, much to my regret." },
+          { speaker: "Narrator", text: "What does the man mean?" }
+        ],
+        spokenQuestion: "What does the man mean?",
+        options: [
+          "A) He was unable to enroll in calculus.",
+          "B) He enrolled in the class but now regrets doing so.",
+          "C) He is excited about studying calculus.",
+          "D) The class schedule was changed."
+        ],
+        correct: 1,
+        explanation: "The phrase 'much to my regret' shows he got into the class, but is unhappy with that outcome."
+      },
+      {
+        id: 5,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Man", text: "Were you able to afford this month's rent?" },
+          { speaker: "Woman", text: "I did, and I have barely enough money to go through this week." },
+          { speaker: "Narrator", text: "What does the woman imply?" }
+        ],
+        spokenQuestion: "What does the woman imply?",
+        options: [
+          "A) She has plenty of money left over.",
+          "B) She paid the rent, leaving her with almost no money.",
+          "C) She was unable to pay her landlord.",
+          "D) She will borrow money to pay next month's rent."
+        ],
+        correct: 1,
+        explanation: "She managed to pay rent, but now has 'barely enough money to go through this week'."
+      },
+      {
+        id: 6,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Woman", text: "I don't think we can finish this project today. Too many layers we haven't painted yet, and we are running out of the blue color too." },
+          { speaker: "Man", text: "I think we need a hand for this." },
+          { speaker: "Narrator", text: "What does the man mean?" }
+        ],
+        spokenQuestion: "What does the man mean?",
+        options: [
+          "A) They should stop working on the painting.",
+          "B) They need someone to assist or help them.",
+          "C) They should use a different color instead of blue.",
+          "D) They can finish the project by themselves today."
+        ],
+        correct: 1,
+        explanation: "'Need a hand' is an idiom meaning needing help or assistance from others."
+      },
+      {
+        id: 7,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Man", text: "We are expected to choose, but I think both candidates for supervisor are underqualified." },
+          { speaker: "Woman", text: "Me too." },
+          { speaker: "Narrator", text: "What does the woman mean?" }
+        ],
+        spokenQuestion: "What does the woman mean?",
+        options: [
+          "A) She wants to apply for supervisor herself.",
+          "B) She agrees that neither candidate has the right qualifications.",
+          "C) She has already selected her favorite candidate.",
+          "D) She believes both candidates are well qualified."
+        ],
+        correct: 1,
+        explanation: "The woman responds 'Me too', agreeing with the man's assessment that both candidates are underqualified."
+      },
+      {
+        id: 8,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Woman", text: "Do we have any more shampoo?" },
+          { speaker: "Man", text: "We are run out of it, someone has to go to the store." },
+          { speaker: "Narrator", text: "What does the man mean?" }
+        ],
+        spokenQuestion: "What does the man mean?",
+        options: [
+          "A) There is another bottle in the bathroom.",
+          "B) The store is out of shampoo.",
+          "C) They have exhausted their shampoo supply and must buy more.",
+          "D) He just bought shampoo yesterday."
+        ],
+        correct: 2,
+        explanation: "'Run out of it' means the supply is completely depleted."
+      },
+      {
+        id: 9,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Man", text: "Emily got her ticket to a concert in Vegas, and she has been looking like that all day." },
+          { speaker: "Woman", text: "She couldn't be happier." },
+          { speaker: "Narrator", text: "What does the woman mean?" }
+        ],
+        spokenQuestion: "What does the woman mean?",
+        options: [
+          "A) Emily is extremely thrilled and overjoyed.",
+          "B) Emily is worried about going to Vegas.",
+          "C) Emily is disappointed with the concert ticket price.",
+          "D) Emily decided not to attend the show."
+        ],
+        correct: 0,
+        explanation: "'She couldn't be happier' indicates maximum possible happiness."
+      },
+      {
+        id: 10,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Woman", text: "Thank you for helping me move in, Chris." },
+          { speaker: "Man", text: "Well, we're neighbors now. Help me with dinner sometimes, and we're even." },
+          { speaker: "Narrator", text: "Where does this conversation probably take place?" }
+        ],
+        spokenQuestion: "Where does this conversation probably take place?",
+        options: [
+          "A) In a restaurant dining hall.",
+          "B) At an apartment building or residential neighborhood.",
+          "C) In a university lecture classroom.",
+          "D) At a grocery supermarket."
+        ],
+        correct: 1,
+        explanation: "Helping someone 'move in' and noting 'we're neighbors now' sets the scene at an apartment or home."
+      },
+      {
+        id: 11,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Man", text: "Were you pleased with last week's convention in Sydney?" },
+          { speaker: "Woman", text: "Nothing went as planned." },
+          { speaker: "Narrator", text: "What does the woman mean?" }
+        ],
+        spokenQuestion: "What does the woman mean?",
+        options: [
+          "A) The convention was completely successful.",
+          "B) The convention went poorly and encountered many issues.",
+          "C) She was unable to travel to Sydney.",
+          "D) She planned the convention herself."
+        ],
+        correct: 1,
+        explanation: "'Nothing went as planned' means the event did not go smoothly and was unsatisfactory."
+      },
+      {
+        id: 12,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Man", text: "Why does it feel like she didn't want to participate in this project, but changed her mind because I was in?" },
+          { speaker: "Woman", text: "Oh Joe, took you long enough." },
+          { speaker: "Narrator", text: "What does the woman mean?" }
+        ],
+        spokenQuestion: "What does the woman mean?",
+        options: [
+          "A) Joe arrived too late to join the team.",
+          "B) Joe took a very long time to realize something obvious.",
+          "C) The project was completed weeks ago.",
+          "D) She dislikes working with Joe."
+        ],
+        correct: 1,
+        explanation: "'Took you long enough' means he took far too long to understand an obvious situation."
+      },
+      {
+        id: 13,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Woman", text: "Sorry, I can't come with you, I'm feeling under the weather today." },
+          { speaker: "Man", text: "No problem. Do you have your medicine, or do you want me to grab some on my way home?" },
+          { speaker: "Narrator", text: "What does the man mean?" }
+        ],
+        spokenQuestion: "What does the man mean?",
+        options: [
+          "A) He is also feeling ill today.",
+          "B) He offers to purchase and bring her medicine.",
+          "C) He insists she attend the event anyway.",
+          "D) He forgot his umbrella in the bad weather."
+        ],
+        correct: 1,
+        explanation: "He asks if she wants him to 'grab some [medicine] on my way home', offering to buy it for her."
+      },
+      {
+        id: 14,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Man", text: "Did you see Emily's name on the list of scholarship grantees?" },
+          { speaker: "Woman", text: "As expected from her, she had prepared herself for it." },
+          { speaker: "Narrator", text: "What does the woman mean?" }
+        ],
+        spokenQuestion: "What does the woman mean?",
+        options: [
+          "A) Emily's scholarship was an unexpected surprise.",
+          "B) Emily did not deserve the award.",
+          "C) Emily received the scholarship because she prepared thoroughly.",
+          "D) Emily refused the scholarship grant."
+        ],
+        correct: 2,
+        explanation: "'As expected from her, she had prepared herself for it' shows her award was expected due to diligent preparation."
+      },
+      {
+        id: 15,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Man", text: "Do you know anything about the final exam in chemistry tomorrow?" },
+          { speaker: "Woman", text: "It's going to be rather difficult, isn't it?" },
+          { speaker: "Narrator", text: "What does the woman mean?" }
+        ],
+        spokenQuestion: "What does the woman mean?",
+        options: [
+          "A) The chemistry exam will be straightforward.",
+          "B) She expects the exam will be quite challenging.",
+          "C) The exam date has been moved.",
+          "D) She will not take the chemistry exam."
+        ],
+        correct: 1,
+        explanation: "She affirms that the exam is 'going to be rather difficult'."
+      },
+      {
+        id: 16,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Woman", text: "Mr. Parapio, it appears these books are one week late." },
+          { speaker: "Man", text: "Yeah, my bad. I forgot they were due to return last Friday." },
+          { speaker: "Narrator", text: "Who is the woman?" }
+        ],
+        spokenQuestion: "Who is the woman?",
+        options: [
+          "A) A bookstore cashier",
+          "B) A librarian",
+          "C) A publishing agent",
+          "D) A university registrar"
+        ],
+        correct: 1,
+        explanation: "Checking borrowed books that are overdue for return identifies her as a librarian."
+      },
+      {
+        id: 17,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Man", text: "I got a dozen large eggs and five pounds of potatoes for only $3 in Fresh Market." },
+          { speaker: "Woman", text: "I don't know how that store makes money." },
+          { speaker: "Narrator", text: "What does the woman imply?" }
+        ],
+        spokenQuestion: "What does the woman imply?",
+        options: [
+          "A) The store's prices are surprisingly cheap.",
+          "B) The eggs and potatoes were spoiled.",
+          "C) Fresh Market is closing soon.",
+          "D) She frequently shops at Fresh Market."
+        ],
+        correct: 0,
+        explanation: "Wondering how the store makes money indicates that $3 for all that food is remarkably inexpensive."
+      },
+      {
+        id: 18,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Woman", text: "Jimmy, you need to pick up the ingredients at the fresh store today. Martin is on his day off." },
+          { speaker: "Man", text: "There goes my plan of grabbing some coffee in the morning." },
+          { speaker: "Narrator", text: "What will the man probably do?" }
+        ],
+        spokenQuestion: "What will the man probably do?",
+        options: [
+          "A) Go grab morning coffee as planned.",
+          "B) Pick up the ingredients instead of having morning coffee.",
+          "C) Call Martin to work.",
+          "D) Take the day off."
+        ],
+        correct: 1,
+        explanation: "'There goes my plan' indicates he must sacrifice his coffee plan to run the errand for ingredients."
+      },
+      {
+        id: 19,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Man", text: "How was your trip to the Seven Magic Mountains?" },
+          { speaker: "Woman", text: "The place is a work of art." },
+          { speaker: "Narrator", text: "What does the woman mean?" }
+        ],
+        spokenQuestion: "What does the woman mean?",
+        options: [
+          "A) The destination was aesthetically magnificent.",
+          "B) The site was under construction.",
+          "C) She was disappointed by the view.",
+          "D) It was too crowded to visit."
+        ],
+        correct: 0,
+        explanation: "Calling a site 'a work of art' expresses high admiration for its artistic and scenic beauty."
+      },
+      {
+        id: 20,
+        part: "Part A",
+        type: "Short Dialogue",
+        script: [
+          { speaker: "Man", text: "I'd like to give you something you need the most right now, and I thought this is the one." },
+          { speaker: "Woman", text: "Oh, you have no idea what it means to me." },
+          { speaker: "Narrator", text: "What does the woman mean?" }
+        ],
+        spokenQuestion: "What does the woman mean?",
+        options: [
+          "A) She doesn't understand the gift's purpose.",
+          "B) She deeply appreciates and is touched by the gift.",
+          "C) She wants to exchange the gift.",
+          "D) She had already bought the same item."
+        ],
+        correct: 1,
+        explanation: "'You have no idea what it means to me' expresses deep appreciation and heartfelt gratitude."
+      },
+      {
+        id: 21,
+        part: "Part B",
+        type: "Longer Conversation",
+        script: [
+          { speaker: "Emily", text: "Hi Professor, did you get a minute? ... It's about the student exchange program. I have my heart set on Guatemala." },
+          { speaker: "Professor", text: "What draws you to Guatemala?" },
+          { speaker: "Narrator", text: "Why does the student go to see the professor?" }
+        ],
+        spokenQuestion: "Why does the student go to see the professor?",
+        options: [
+          "A) To complain about her research paper grade.",
+          "B) To discuss participating in the student exchange program to Guatemala.",
+          "C) To ask for a letter of recommendation for employment.",
+          "D) To request permission to drop her Spanish course."
+        ],
+        correct: 1,
+        explanation: "Emily visits her professor specifically to discuss her plan to join the student exchange program in Guatemala."
+      },
+      {
+        id: 22,
+        part: "Part B",
+        type: "Longer Conversation",
+        script: [
+          { speaker: "Emily", text: "Guatemala has the exact type of agricultural practices, economy, and environmental conditions I want to study and explore." },
+          { speaker: "Narrator", text: "Why does the student want to go to Guatemala?" }
+        ],
+        spokenQuestion: "Why does the student want to go to Guatemala?",
+        options: [
+          "A) She has relatives who reside there.",
+          "B) To study its agricultural practices, economy, and environmental conditions.",
+          "C) Because it is the least expensive program available.",
+          "D) To fulfill a required language minor."
+        ],
+        correct: 1,
+        explanation: "She explicitly states that Guatemala has the precise agricultural, economic, and environmental conditions relevant to her research."
+      },
+      {
+        id: 23,
+        part: "Part B",
+        type: "Longer Conversation",
+        script: [
+          { speaker: "Professor", text: "The exchange program to Guatemala is only for Spanish majors, and the Spanish department is usually strict about that." },
+          { speaker: "Narrator", text: "What makes the student may not be able to go to Guatemala?" }
+        ],
+        spokenQuestion: "What makes the student may not be able to go to Guatemala?",
+        options: [
+          "A) Her grade point average is below the requirement.",
+          "B) The exchange program is restricted solely to Spanish majors.",
+          "C) The program was canceled for the upcoming semester.",
+          "D) The university lacked funding for travel scholarships."
+        ],
+        correct: 1,
+        explanation: "The professor explains that the Guatemala exchange program is strictly reserved for Spanish majors."
+      },
+      {
+        id: 24,
+        part: "Part B",
+        type: "Longer Conversation",
+        script: [
+          { speaker: "Professor", text: "I think you should prepare some arguments for the Spanish department, just in case. Can you do that?" },
+          { speaker: "Emily", text: "Of course, I'll be ready for that. Thank you again, Professor." },
+          { speaker: "Narrator", text: "What will the student do after the conversation?" }
+        ],
+        spokenQuestion: "What will the student do after the conversation?",
+        options: [
+          "A) Change her major to Spanish.",
+          "B) Choose a different destination in Europe.",
+          "C) Prepare persuasive arguments for the Spanish department.",
+          "D) Purchase her flight tickets."
+        ],
+        correct: 2,
+        explanation: "The professor recommends preparing arguments to appeal to the Spanish department, and Emily agrees."
+      },
+      {
+        id: 25,
+        part: "Part C",
+        type: "Short Lecture",
+        script: [
+          { speaker: "Lecturer", text: "Many people know a certain movie with lots of balloons that can lift a house, but how many of you know that balloon was indeed the beginning of human trip through the air? Yes, you heard it right. Long before the gigantic machine we called the airplane, two brothers demonstrated their invention: the hot air balloon, in Annonay, France, in 1783." },
+          { speaker: "Narrator", text: "What does the speaker mainly discuss?" }
+        ],
+        spokenQuestion: "What does the speaker mainly discuss?",
+        options: [
+          "A) The plot of a modern animated movie.",
+          "B) The early history and invention of the hot air balloon.",
+          "C) The aerodynamics of modern commercial airplanes.",
+          "D) Tourism festivals in Annonay, France."
+        ],
+        correct: 1,
+        explanation: "The lecture introduces how human flight began with the Montgolfier brothers' hot air balloon in 1783."
+      }
+    ];
+
+    const SCALED_MAP = [
+      31, 32, 33, 35, 37, 39, 41, 43, 45, 47,
+      49, 51, 53, 54, 56, 58, 60, 62, 63, 65,
+      66, 67, 67, 68, 68, 68
+    ];
+
+    let currentIndex = 0;
+    const userAnswers = new Array(QUESTIONS.length).fill(null);
+    const flaggedItems = new Array(QUESTIONS.length).fill(false);
+    let secondsLeft = 35 * 60;
+    let examTimer = null;
+    let isLocalAudioLoaded = false;
+    let isMasterPlaying = false;
+
+    const audioElement = document.getElementById('examAudioPlayer');
+    const audioProgressBar = document.getElementById('audioProgressBar');
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initPalette();
+      loadQuestion(0);
+      startTimer();
+      setupAudioListeners();
+    });
+
+    function handleAudioFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const fileUrl = URL.createObjectURL(file);
+      audioElement.src = fileUrl;
+      isLocalAudioLoaded = true;
+
+      document.getElementById('fileLabel').textContent = file.name;
+      document.getElementById('audioStatusText').textContent = "MP3 Active: " + file.name.substring(0, 16) + "...";
+      document.getElementById('audioLed').className = "w-2 h-2 rounded-full bg-emerald-400";
+      audioElement.load();
+    }
+
+    function setupAudioListeners() {
+      audioElement.addEventListener('timeupdate', () => {
+        if (!audioElement.duration) return;
+        const current = audioElement.currentTime;
+        const dur = audioElement.duration;
+        audioProgressBar.style.width = `${(current / dur) * 100}%`;
+        document.getElementById('currentTimeLabel').textContent = formatSeconds(current);
+        document.getElementById('durationLabel').textContent = formatSeconds(dur);
+      });
+
+      audioElement.addEventListener('play', () => {
+        isMasterPlaying = true;
+        updatePlayBtnUI();
+      });
+
+      audioElement.addEventListener('pause', () => {
+        isMasterPlaying = false;
+        updatePlayBtnUI();
+      });
+
+      audioElement.addEventListener('ended', () => {
+        isMasterPlaying = false;
+        updatePlayBtnUI();
+      });
+    }
+
+    function toggleMasterAudio() {
+      if (isLocalAudioLoaded) {
+        if (audioElement.paused) {
+          audioElement.play().catch(e => console.log(e));
+        } else {
+          audioElement.pause();
+        }
+      } else {
+        // Voice synthesizer fallback for full exam session
+        if ('speechSynthesis' in window) {
+          if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+            isMasterPlaying = false;
+            updatePlayBtnUI();
+          } else {
+            const allText = QUESTIONS.map(q => {
+              const dlg = q.script.map(s => `${s.speaker}: ${s.text}`).join('. ');
+              return `Question ${q.id}. ${dlg}`;
+            }).join('. ... Next question. ... ');
+
+            const utter = new SpeechSynthesisUtterance(allText);
+            utter.rate = 0.95;
+            utter.pitch = 1.0;
+            utter.onend = () => { isMasterPlaying = false; updatePlayBtnUI(); };
+            window.speechSynthesis.speak(utter);
+            isMasterPlaying = true;
+            updatePlayBtnUI();
+          }
+        }
+      }
+    }
+
+    function updatePlayBtnUI() {
+      const icon = document.getElementById('playIcon');
+      const text = document.getElementById('playText');
+      const animWave = document.getElementById('playingAnimation');
+      const idleIcon = document.getElementById('idleAnimation');
+
+      if (isMasterPlaying) {
+        icon.className = "fa-solid fa-pause";
+        text.textContent = "Pause Exam Audio";
+        animWave.classList.remove('hidden');
+        idleIcon.classList.add('hidden');
+      } else {
+        icon.className = "fa-solid fa-play";
+        text.textContent = "Resume Exam Audio";
+        animWave.classList.add('hidden');
+        idleIcon.classList.remove('hidden');
+      }
+    }
+
+    function setAudioVolume(val) {
+      audioElement.volume = parseFloat(val);
+    }
+
+    function loadQuestion(index) {
+      currentIndex = index;
+      const q = QUESTIONS[index];
+
+      document.getElementById('partBadge').textContent = q.part;
+      document.getElementById('partTypeLabel').textContent = q.type;
+      document.getElementById('questionNumLabel').textContent = `Question ${q.id} of 25`;
+
+      const optContainer = document.getElementById('optionsContainer');
+      optContainer.innerHTML = '';
+
+      q.options.forEach((optText, optIdx) => {
+        const isSelected = userAnswers[index] === optIdx;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => selectOption(optIdx);
+        btn.className = `w-full text-left p-3.5 rounded-xl border text-sm font-medium transition flex items-start gap-3 ${
+          isSelected
+            ? 'bg-indigo-50 border-indigo-600 text-indigo-950 ring-1 ring-indigo-500 shadow-sm'
+            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+        }`;
+
+        btn.innerHTML = `
+          <span class="w-5 h-5 rounded-full border text-xs flex items-center justify-center shrink-0 mt-0.5 ${
+            isSelected ? 'bg-indigo-600 text-white border-indigo-600 font-bold' : 'border-slate-300 text-slate-500'
+          }">
+            ${String.fromCharCode(65 + optIdx)}
+          </span>
+          <span class="leading-relaxed flex-1">${optText.replace(/^[A-D]\)\s*/, '')}</span>
+        `;
+        optContainer.appendChild(btn);
+      });
+
+      const flagBtn = document.getElementById('flagBtn');
+      const flagText = document.getElementById('flagBtnText');
+      if (flaggedItems[index]) {
+        flagBtn.className = 'text-xs font-semibold px-2.5 py-1 rounded-md border border-amber-300 bg-amber-50 text-amber-700 flex items-center gap-1.5 transition';
+        flagText.textContent = 'Flagged';
+      } else {
+        flagBtn.className = 'text-xs font-semibold px-2.5 py-1 rounded-md border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300 flex items-center gap-1.5 transition';
+        flagText.textContent = 'Flag Question';
+      }
+
+      document.getElementById('prevBtn').disabled = (index === 0);
+      document.getElementById('prevBtn').classList.toggle('opacity-40', index === 0);
+      document.getElementById('nextBtn').innerHTML = (index === QUESTIONS.length - 1)
+        ? `<span>Finish Exam</span> <i class="fa-solid fa-check ml-1"></i>`
+        : `<span>Next Question</span> <i class="fa-solid fa-chevron-right ml-1"></i>`;
+
+      updatePaletteUI();
+    }
+
+    function selectOption(optIdx) {
+      userAnswers[currentIndex] = optIdx;
+      loadQuestion(currentIndex);
+    }
+
+    function toggleFlagCurrentQuestion() {
+      flaggedItems[currentIndex] = !flaggedItems[currentIndex];
+      loadQuestion(currentIndex);
+    }
+
+    function goToPrevQuestion() {
+      if (currentIndex > 0) loadQuestion(currentIndex - 1);
+    }
+
+    function goToNextQuestion() {
+      if (currentIndex < QUESTIONS.length - 1) {
+        loadQuestion(currentIndex + 1);
+      } else {
+        finishExam();
+      }
+    }
+
+    function initPalette() {
+      const grid = document.getElementById('paletteGrid');
+      grid.innerHTML = '';
+      QUESTIONS.forEach((_, idx) => {
+        const btn = document.createElement('button');
+        btn.id = `palette-${idx}`;
+        btn.textContent = idx + 1;
+        btn.onclick = () => loadQuestion(idx);
+        grid.appendChild(btn);
+      });
+      updatePaletteUI();
+    }
+
+    function updatePaletteUI() {
+      QUESTIONS.forEach((_, idx) => {
+        const btn = document.getElementById(`palette-${idx}`);
+        if (!btn) return;
+
+        btn.className = 'h-9 rounded-lg text-xs font-bold relative transition flex items-center justify-center border ';
+
+        if (idx === currentIndex) {
+          btn.className += 'ring-2 ring-indigo-600 border-indigo-600 ';
+        } else {
+          btn.className += 'border-slate-200 ';
+        }
+
+        if (userAnswers[idx] !== null) {
+          btn.className += 'bg-indigo-600 text-white ';
+        } else {
+          btn.className += 'bg-slate-100 text-slate-700 hover:bg-slate-200 ';
+        }
+
+        const dot = btn.querySelector('.flag-dot');
+        if (dot) dot.remove();
+
+        if (flaggedItems[idx]) {
+          const flagEl = document.createElement('span');
+          flagEl.className = 'flag-dot absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border border-white';
+          btn.appendChild(flagEl);
+        }
+      });
+
+      const answered = userAnswers.filter(a => a !== null).length;
+      document.getElementById('answeredCounter').textContent = `${answered} / ${QUESTIONS.length} Answered`;
+    }
+
+    function startTimer() {
+      const display = document.getElementById('timerText');
+      examTimer = setInterval(() => {
+        if (secondsLeft <= 0) {
+          clearInterval(examTimer);
+          finishExam();
+          return;
+        }
+        secondsLeft--;
+        display.textContent = formatSeconds(secondsLeft);
+
+        if (secondsLeft <= 300) {
+          document.getElementById('timerBox').classList.add('text-rose-400', 'border-rose-600', 'animate-pulse');
+        }
+      }, 1000);
+    }
+
+    function formatSeconds(sec) {
+      if (isNaN(sec)) return "00:00";
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function finishExam() {
+      clearInterval(examTimer);
+      if (audioElement) audioElement.pause();
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+      let rawScore = 0;
+      QUESTIONS.forEach((q, idx) => {
+        if (userAnswers[idx] === q.correct) rawScore++;
+      });
+
+      const scaled = SCALED_MAP[rawScore] || 31;
+      let cefr = "B1 (Independent)";
+      if (scaled >= 64) cefr = "C1 (Advanced Operational)";
+      else if (scaled >= 54) cefr = "B2 (Vantage)";
+
+      document.getElementById('testWorkspace').classList.add('hidden');
+      document.getElementById('resultsSection').classList.remove('hidden');
+
+      document.getElementById('resRawScore').textContent = rawScore;
+      document.getElementById('resScaledScore').textContent = scaled;
+      document.getElementById('resCefr').textContent = cefr;
+
+      const list = document.getElementById('resultsList');
+      list.innerHTML = '';
+
+      QUESTIONS.forEach((q, idx) => {
+        const userChoice = userAnswers[idx];
+        const isCorrect = userChoice === q.correct;
+
+        const card = document.createElement('div');
+        card.className = `p-5 rounded-2xl border ${
+          isCorrect ? 'bg-emerald-50/40 border-emerald-200' : 'bg-rose-50/40 border-rose-200'
+        }`;
+
+        let scriptHtml = q.script.map(s => `<div><span class="font-bold text-slate-700">${s.speaker}:</span> <span>"${s.text}"</span></div>`).join('');
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <span class="text-xs font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-800">
+              Question #${q.id} &bull; ${q.part}
+            </span>
+            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${
+              isCorrect ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+            }">
+              ${isCorrect ? '<i class="fa-solid fa-check mr-1"></i> Correct' : userChoice !== null ? '<i class="fa-solid fa-xmark mr-1"></i> Incorrect' : 'Unanswered'}
+            </span>
+          </div>
+
+          <div class="text-xs bg-white p-3.5 rounded-xl border border-slate-200 text-slate-600 space-y-1 mb-3">
+            ${scriptHtml}
+          </div>
+
+          <p class="text-sm font-bold text-slate-900 mb-2">Spoken Question: ${q.spokenQuestion}</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mb-3">
+            ${q.options.map((opt, oIdx) => {
+              const isKey = oIdx === q.correct;
+              const isSelected = oIdx === userChoice;
+              let style = 'bg-white border-slate-200 text-slate-600';
+              if (isKey) style = 'bg-emerald-100 border-emerald-400 text-emerald-950 font-bold';
+              else if (isSelected && !isKey) style = 'bg-rose-100 border-rose-400 text-rose-950 font-bold';
+
+              return `
+                <div class="p-2.5 rounded-lg border ${style}">
+                  ${opt}
+                  ${isKey ? ' <span class="text-emerald-700 font-bold ml-1">(Correct Answer)</span>' : ''}
+                  ${isSelected && !isKey ? ' <span class="text-rose-700 font-bold ml-1">(Your Answer)</span>' : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="text-xs bg-indigo-50 border-l-2 border-indigo-600 p-2.5 rounded-r text-indigo-950">
+            <strong>Explanation:</strong> ${q.explanation}
+          </div>
+        `;
+        list.appendChild(card);
+      });
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function restartExam() {
+      userAnswers.fill(null);
+      flaggedItems.fill(false);
+      secondsLeft = 35 * 60;
+
+      document.getElementById('resultsSection').classList.add('hidden');
+      document.getElementById('testWorkspace').classList.remove('hidden');
+
+      loadQuestion(0);
+      startTimer();
+    }
+  </script>
+</body>
+</html>
