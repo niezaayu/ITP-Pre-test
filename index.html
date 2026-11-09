@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TOEFL ITP® Listening Mock Test - Edition 2 (Official Audio)</title>
+  <title>TOEFL ITP® Complete Mock Examination (50 Questions)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +12,9 @@
   <style>
     body { font-family: 'Inter', sans-serif; }
     .font-mono-code { font-family: 'JetBrains Mono', monospace; }
+    .passage-scroll::-webkit-scrollbar { width: 6px; }
+    .passage-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+    .passage-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased">
@@ -21,60 +24,79 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <div class="bg-indigo-600 font-black text-xs px-2.5 py-1 rounded tracking-wider uppercase flex items-center gap-1.5 shadow-sm">
-          <i class="fa-solid fa-headphones"></i>
+          <i class="fa-solid fa-graduation-cap"></i>
           <span>TOEFL ITP®</span>
         </div>
         <div>
           <h1 class="text-sm sm:text-base font-bold flex items-center gap-2">
-            Section 1: Listening Comprehension
+            Institutional Mock Test Suite
             <span class="text-xs bg-indigo-950 text-indigo-300 border border-indigo-700/60 px-2 py-0.5 rounded-full font-medium">
-              Single-Listen Examination
+              50 Questions
             </span>
           </h1>
-          <p class="text-xs text-slate-400">18 Questions &bull; Continuous Exam Audio</p>
+          <p class="text-xs text-slate-400">Listening (10) &bull; Structure (20) &bull; Reading (20)</p>
         </div>
       </div>
 
-      <!-- TIMER, AUDIO STATUS & SUBMIT -->
+      <!-- TIMER & SUBMIT BUTTON -->
       <div class="flex items-center gap-3 ml-auto">
-        <!-- Audio Source Indicator -->
-        <div id="audioSourceIndicator" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-800 border border-slate-700 text-slate-300">
-          <span id="audioLed" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-          <span id="audioStatusText">Voice Synthesizer Fallback</span>
-        </div>
-
-        <!-- Section Timer -->
         <div id="timerBox" class="flex items-center gap-1.5 bg-slate-800 border border-slate-700 px-3 py-1 rounded-lg text-sm font-mono-code font-bold text-amber-300">
           <i class="fa-regular fa-clock text-slate-400"></i>
-          <span id="timerText">25:00</span>
+          <span id="timerText">50:00</span>
         </div>
 
-        <button onclick="finishExam()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-lg transition shadow-sm">
+        <button onclick="openSubmitModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-lg transition shadow-sm">
           Submit Exam
         </button>
       </div>
     </div>
   </header>
 
-  <!-- MASTER AUDIO CONTROLLER (NO PER-QUESTION REPLAY, SINGLE LISTEN ENFORCED) -->
-  <section class="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 shadow-sm sticky top-[57px] z-40">
+  <!-- SECTION NAVIGATION TABS -->
+  <nav class="bg-slate-800 border-b border-slate-700 text-slate-300 px-4 sm:px-6 py-2 shadow-inner">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2 overflow-x-auto py-1">
+        <button id="tab-listening" onclick="switchSection('listening')" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-indigo-600 text-white shadow-sm">
+          <i class="fa-solid fa-headphones"></i>
+          <span>Section 1: Listening (10)</span>
+          <span id="badge-listening" class="bg-indigo-900/80 px-1.5 py-0.2 rounded-full text-[10px]">0/10</span>
+        </button>
+
+        <button id="tab-structure" onclick="switchSection('structure')" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:bg-slate-700">
+          <i class="fa-solid fa-pen-ruler"></i>
+          <span>Section 2: Structure (20)</span>
+          <span id="badge-structure" class="bg-slate-700 px-1.5 py-0.2 rounded-full text-[10px]">0/20</span>
+        </button>
+
+        <button id="tab-reading" onclick="switchSection('reading')" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:bg-slate-700">
+          <i class="fa-solid fa-book-open"></i>
+          <span>Section 3: Reading (20)</span>
+          <span id="badge-reading" class="bg-slate-700 px-1.5 py-0.2 rounded-full text-[10px]">0/20</span>
+        </button>
+      </div>
+
+      <div class="text-xs text-slate-400 font-medium hidden md:block">
+        Total Answered: <span id="totalAnsweredCounter" class="text-white font-bold font-mono-code">0 / 50</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- AUDIO BAR: ACTIVE ONLY ON SECTION 1 (LISTENING) -->
+  <section id="listeningAudioBar" class="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 shadow-sm sticky top-[57px] z-40">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-      
-      <!-- Audio File Loader & Master Play -->
       <div class="w-full md:w-auto flex flex-wrap items-center gap-3">
         <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 border border-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 flex items-center gap-2 transition">
           <i class="fa-solid fa-folder-open text-indigo-600"></i>
-          <span id="fileLabel">Load New Audio Track</span>
+          <span id="fileLabel">Load "audio quiz 1.mp3"</span>
           <input type="file" id="audioFileInput" accept="audio/*" class="hidden" onchange="handleAudioFileSelect(event)">
         </label>
 
         <button id="masterPlayBtn" onclick="toggleMasterAudio()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition shadow-sm">
           <i id="playIcon" class="fa-solid fa-play"></i>
-          <span id="playText">Start Exam Audio</span>
+          <span id="playText">Start Section 1 Audio</span>
         </button>
       </div>
 
-      <!-- Scrubber (Disabled to prevent rewinding) & Volume -->
       <div class="w-full md:w-5/12 flex items-center gap-3">
         <span id="currentTimeLabel" class="text-xs font-mono-code text-slate-500">00:00</span>
         <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
@@ -91,11 +113,10 @@
       </div>
     </div>
 
-    <!-- EXAM POLICY NOTICE -->
     <div class="max-w-7xl mx-auto mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-amber-700 font-medium">
       <div class="flex items-center gap-1.5">
         <i class="fa-solid fa-shield-halved text-amber-600"></i>
-        <span><strong>Official Test Rule:</strong> Master audio plays continuously forward. Individual question replay is disabled.</span>
+        <span><strong>Official Test Rule:</strong> Listening audio plays continuously forward. Individual question replay is disabled.</span>
       </div>
       <span class="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-0.5 rounded font-bold">
         Single Listen Enforced
@@ -112,22 +133,22 @@
     <!-- DIRECTIONS BANNER -->
     <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm text-xs sm:text-sm text-slate-700 flex flex-col gap-2">
       <div class="flex items-center justify-between">
-        <span class="font-bold text-indigo-700 uppercase tracking-wider text-xs flex items-center gap-1.5">
-          <i class="fa-solid fa-circle-info"></i> Section Directions
+        <span id="sectionTitleDisplay" class="font-bold text-indigo-700 uppercase tracking-wider text-xs flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-info"></i> Section 1: Listening Comprehension
         </span>
-        <span class="text-xs text-slate-400 font-mono-code">18 Items &bull; 25 Minutes</span>
+        <span id="sectionItemCountDisplay" class="text-xs text-slate-400 font-mono-code">10 Items &bull; 50 Mins Total</span>
       </div>
-      <p class="leading-relaxed">
-        Listen to the conversations and lectures on the master audio track. After each conversation, you will hear a question. Read the four possible answers and select the best response. <strong>Conversations and questions are not repeated.</strong>
+      <p id="sectionDirectionsText" class="leading-relaxed">
+        In Part A, you will hear short conversations between two people. After each conversation, you will hear a question. Read the four possible answers and choose the best answer. <strong>Conversations and questions are not repeated.</strong>
       </p>
     </div>
 
     <!-- TWO COLUMN TEST DISPLAY -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
 
-      <!-- LEFT: AUDIO STATUS / LIVE SOUND MONITOR (5 Cols) -->
-      <section class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between min-h-[420px]">
-        <div>
+      <!-- LEFT COLUMN: STIMULUS (Audio Monitor, Grammar Prompt, or Reading Passage) (5 Cols) -->
+      <section class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between min-h-[460px]">
+        <div class="flex-1 flex flex-col">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
             <div class="flex items-center gap-2">
               <span id="partBadge" class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold px-2.5 py-1 rounded-md">
@@ -135,13 +156,13 @@
               </span>
               <span id="partTypeLabel" class="text-xs text-slate-500 font-medium">Short Dialogue</span>
             </div>
-            <span class="text-xs font-mono-code text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+            <span id="stimulusRightTag" class="text-xs font-mono-code text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
               Master Track Stream
             </span>
           </div>
 
-          <!-- SOUND MONITOR CARD -->
-          <div class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-2xl p-6 text-center space-y-4 shadow-inner relative overflow-hidden">
+          <!-- LISTENING STIMULUS (Sound Monitor) -->
+          <div id="stimulusListening" class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-2xl p-6 text-center space-y-4 shadow-inner relative overflow-hidden my-auto">
             <div id="playingAnimation" class="hidden flex items-center justify-center gap-1 py-4">
               <span class="w-1.5 h-6 bg-indigo-400 rounded-full animate-bounce"></span>
               <span class="w-1.5 h-10 bg-indigo-300 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
@@ -155,46 +176,70 @@
             </div>
 
             <div class="space-y-1">
-              <h3 id="stimulusHeadline" class="text-base font-bold text-white">Listening Section In Progress</h3>
-              <p id="stimulusSubtext" class="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
-                The master audio plays once continuously. Answer questions in your test booklet as you listen.
+              <h3 class="text-base font-bold text-white">Section 1 Audio Active</h3>
+              <p class="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+                The master audio plays once continuously. Select your answers on the right as the spoken audio proceeds.
               </p>
+            </div>
+          </div>
+
+          <!-- STRUCTURE STIMULUS -->
+          <div id="stimulusStructure" class="hidden space-y-4 my-auto">
+            <div class="bg-indigo-50/70 border border-indigo-100 p-4 rounded-xl text-xs text-indigo-950 leading-relaxed">
+              <span class="font-bold block mb-1 uppercase tracking-wider text-indigo-700">Standard English Inquiries:</span>
+              <span id="structureDirectionsSubtitle">Questions 1–12 are incomplete sentences. Beneath each sentence you will see four words or phrases. Choose the one word or phrase that best completes the sentence.</span>
+            </div>
+            <div class="p-5 bg-slate-50 border border-slate-200 rounded-xl shadow-inner font-serif text-base text-slate-800 leading-relaxed" id="structurePromptBox">
+              <!-- Injected sentence with gap or underlined words -->
+            </div>
+          </div>
+
+          <!-- READING STIMULUS (Passage viewer) -->
+          <div id="stimulusReading" class="hidden flex-1 flex flex-col overflow-hidden">
+            <h3 id="readingPassageTitle" class="text-sm font-bold text-slate-900 mb-2">Passage 1</h3>
+            <div id="readingPassageText" class="passage-scroll flex-1 overflow-y-auto max-h-[380px] p-4 bg-slate-50 border border-slate-200 rounded-xl font-serif text-sm text-slate-700 leading-relaxed space-y-3">
+              <!-- Injected passage paragraphs -->
             </div>
           </div>
         </div>
 
-        <div class="pt-4 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between">
-          <span>Standard TOEFL ITP Format</span>
-          <span>Individual Replay Prohibited</span>
+        <div class="pt-4 mt-4 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between">
+          <span id="stimulusFooterLeft">TOEFL ITP Standard</span>
+          <span id="stimulusFooterRight">Single-Session Evaluation</span>
         </div>
       </section>
 
-      <!-- RIGHT: PURE QUESTION CARD & PALETTE (7 Cols) -->
+      <!-- RIGHT COLUMN: QUESTION & OPTIONS & PALETTE (7 Cols) -->
       <section class="lg:col-span-7 flex flex-col gap-5">
 
         <!-- QUESTION CARD -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col">
           <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
             <span id="questionNumLabel" class="text-xs font-bold uppercase tracking-wider text-indigo-600">
-              Question 1 of 18
+              Question 1 of 10
             </span>
 
-            <button id="flagBtn" onclick="toggleFlagCurrentQuestion()" class="text-xs font-semibold px-2.5 py-1 rounded-md border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300 flex items-center gap-1.5 transition">
-              <i class="fa-regular fa-bookmark"></i>
-              <span id="flagBtnText">Flag Question</span>
-            </button>
+            <div class="flex items-center gap-2">
+              <button onclick="clearCurrentSelection()" class="text-xs font-semibold px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-600 transition">
+                Clear
+              </button>
+              <button id="flagBtn" onclick="toggleFlagCurrentQuestion()" class="text-xs font-semibold px-2.5 py-1 rounded-md border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300 flex items-center gap-1.5 transition">
+                <i class="fa-regular fa-bookmark"></i>
+                <span id="flagBtnText">Flag</span>
+              </button>
+            </div>
           </div>
 
-          <h2 class="text-sm font-semibold text-slate-700 mb-4">
+          <h2 id="questionPromptHeading" class="text-sm font-semibold text-slate-800 mb-4 leading-snug">
             Choose the one best answer to the question you heard:
           </h2>
 
-          <!-- FOUR CHOICES (A, B, C, D) -->
+          <!-- FOUR MULTIPLE CHOICE OPTIONS -->
           <div id="optionsContainer" class="space-y-2.5">
             <!-- Dynamically injected -->
           </div>
 
-          <!-- NAVIGATION (NO PER-QUESTION REPLAY CONTROLS) -->
+          <!-- NAVIGATION -->
           <div class="flex items-center justify-between mt-6 pt-4 border-t border-slate-100">
             <button id="prevBtn" onclick="goToPrevQuestion()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
               <i class="fa-solid fa-chevron-left mr-1"></i> Previous
@@ -205,15 +250,15 @@
           </div>
         </div>
 
-        <!-- 18-ITEM PALETTE -->
+        <!-- QUESTION PALETTE -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
           <div class="flex items-center justify-between mb-3 text-xs">
-            <span class="font-bold uppercase tracking-wider text-slate-500">Question Palette</span>
-            <span id="answeredCounter" class="text-slate-500 font-medium">0 / 18 Answered</span>
+            <span id="paletteSectionLabel" class="font-bold uppercase tracking-wider text-slate-500">Listening Palette (1–10)</span>
+            <span id="answeredCounter" class="text-slate-500 font-medium">0 / 10 Answered</span>
           </div>
 
-          <div id="paletteGrid" class="grid grid-cols-6 sm:grid-cols-6 gap-2">
-            <!-- Dynamically generated 1-18 -->
+          <div id="paletteGrid" class="grid grid-cols-5 sm:grid-cols-10 gap-2">
+            <!-- Dynamically generated palette buttons -->
           </div>
 
           <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
@@ -228,419 +273,857 @@
     </div>
   </main>
 
-  <!-- POST-TEST REPORT -->
-  <section id="resultsSection" class="hidden max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 space-y-6 flex-1">
+  <!-- CONFIRM SUBMISSION MODAL -->
+  <div id="submitModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-xl">
+        <i class="fa-solid fa-file-circle-check"></i>
+      </div>
+      <div class="text-center">
+        <h3 class="text-lg font-bold text-slate-900">Finish and Submit Exam?</h3>
+        <p class="text-xs text-slate-500 mt-1">Make sure you have reviewed all flagged and unanswered items before final submission.</p>
+      </div>
+
+      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-2">
+        <div class="flex justify-between text-slate-600">
+          <span>Listening Completed:</span>
+          <span id="modalListSummary" class="font-bold text-slate-900 font-mono-code">0 / 10</span>
+        </div>
+        <div class="flex justify-between text-slate-600">
+          <span>Structure Completed:</span>
+          <span id="modalStructSummary" class="font-bold text-slate-900 font-mono-code">0 / 20</span>
+        </div>
+        <div class="flex justify-between text-slate-600">
+          <span>Reading Completed:</span>
+          <span id="modalReadSummary" class="font-bold text-slate-900 font-mono-code">0 / 20</span>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeSubmitModal()" class="w-1/2 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+          Continue Test
+        </button>
+        <button onclick="confirmFinalSubmit()" class="w-1/2 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow transition">
+          Yes, Submit
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST-TEST REPORT SECTION (Hidden Initially) -->
+  <section id="resultsSection" class="hidden max-w-6xl mx-auto w-full px-4 sm:px-6 py-8 space-y-6 flex-1">
     
     <!-- CERTIFICATE HEADER -->
     <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-indigo-900 flex flex-col md:flex-row items-center justify-between gap-6">
       <div>
         <span class="text-xs font-bold uppercase tracking-widest text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-800">
-          Listening Diagnostic Report
+          Official Institutional Score Report
         </span>
-        <h2 class="text-2xl sm:text-3xl font-extrabold mt-3">
-          Listening Score: <span id="resScaledScore" class="text-amber-400">--</span> / 68
+        <h2 class="text-3xl sm:text-4xl font-extrabold mt-3">
+          Total Scaled Score: <span id="resTotalScaled" class="text-amber-400">--</span> / 677
         </h2>
         <p class="text-sm text-slate-300 mt-1">
-          Raw Score: <span id="resRawScore" class="font-bold text-white">--</span> of 18 items correct &bull; CEFR Level: <span id="resCefr" class="font-bold text-emerald-400">--</span>
+          CEFR Proficiency Level: <span id="resCefr" class="font-bold text-emerald-400">--</span> &bull; Formula: ((Sec1 + Sec2 + Sec3) &times; 10) / 3
         </p>
       </div>
 
       <div class="flex gap-3">
         <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-xl border border-slate-700 transition">
-          <i class="fa-solid fa-print mr-1.5"></i> Print Summary
+          <i class="fa-solid fa-print mr-1.5"></i> Print Report
         </button>
-        <button onclick="restartExam()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl transition shadow">
-          <i class="fa-solid fa-rotate-right mr-1.5"></i> Retake Test
+        <button onclick="restartFullExam()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl transition shadow">
+          <i class="fa-solid fa-rotate-right mr-1.5"></i> Retake Examination
         </button>
       </div>
     </div>
 
-    <!-- TRANSCRIPT & EXPLANATION AUDIT -->
+    <!-- 3-SECTION SCORE SUMMARY GRID -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div>
+          <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider block mb-1">Section 1: Listening (10 Items)</span>
+          <div class="flex items-baseline gap-2">
+            <span id="scoreSec1Scaled" class="text-3xl font-black text-slate-900">--</span>
+            <span class="text-xs text-slate-400 font-bold">/ 68 Scaled</span>
+          </div>
+          <p id="scoreSec1Raw" class="text-xs text-slate-500 mt-2">Raw Correct: 0 of 10</p>
+        </div>
+        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-4">
+          <div id="progSec1" class="bg-indigo-600 h-full w-0 rounded-full"></div>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div>
+          <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider block mb-1">Section 2: Structure (20 Items)</span>
+          <div class="flex items-baseline gap-2">
+            <span id="scoreSec2Scaled" class="text-3xl font-black text-slate-900">--</span>
+            <span class="text-xs text-slate-400 font-bold">/ 68 Scaled</span>
+          </div>
+          <p id="scoreSec2Raw" class="text-xs text-slate-500 mt-2">Raw Correct: 0 of 20</p>
+        </div>
+        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-4">
+          <div id="progSec2" class="bg-emerald-600 h-full w-0 rounded-full"></div>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div>
+          <span class="text-xs font-bold text-amber-600 uppercase tracking-wider block mb-1">Section 3: Reading (20 Items)</span>
+          <div class="flex items-baseline gap-2">
+            <span id="scoreSec3Scaled" class="text-3xl font-black text-slate-900">--</span>
+            <span class="text-xs text-slate-400 font-bold">/ 68 Scaled</span>
+          </div>
+          <p id="scoreSec3Raw" class="text-xs text-slate-500 mt-2">Raw Correct: 0 of 20</p>
+        </div>
+        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-4">
+          <div id="progSec3" class="bg-amber-600 h-full w-0 rounded-full"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIAGNOSTIC AUDIT BREAKDOWN -->
     <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-      <div class="border-b border-slate-100 pb-4 mb-6">
-        <h3 class="text-lg font-bold text-slate-900">Transcript & Explanation Breakdown</h3>
-        <p class="text-xs text-slate-500">Review spoken dialogue transcripts, verified answer keys, and pedagogical rationales.</p>
+      <div class="border-b border-slate-100 pb-4 mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900">Comprehensive Item Diagnostics & Key</h3>
+          <p class="text-xs text-slate-500">Detailed transcript citations, grammatical rules, and answer explanations.</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="filterAudit('all')" id="btnFilterAll" class="px-3 py-1 rounded-md text-xs font-bold bg-indigo-600 text-white">All Items</button>
+          <button onclick="filterAudit('incorrect')" id="btnFilterInc" class="px-3 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">Incorrect Only</button>
+        </div>
       </div>
 
       <div id="resultsList" class="space-y-6">
-        <!-- Dynamically injected -->
+        <!-- Dynamically injected items -->
       </div>
     </div>
   </section>
 
   <!-- FOOTER -->
   <footer class="mt-auto border-t border-slate-200 bg-white py-3 px-4 text-center text-xs text-slate-500">
-    TOEFL ITP® Listening Mock Exam &bull; Edition 2 (Single-Play Audio Standard)
+    TOEFL ITP® Complete Exam Suite &bull; Single-Play Audio &bull; Standard Converted Scaled Scores
   </footer>
 
-  <!-- DATA & SCRIPT LOGIC -->
+  <!-- DATABASE AND APPLICATION ENGINE -->
   <script>
-    const QUESTIONS = [
-      // PART A: Short Dialogues (Q1 - Q10)
-      {
-        id: 1,
-        part: "Part A",
-        type: "Short Dialogue",
-        script: [
-          { speaker: "Woman", text: "Why did you get that kind of fruit?" },
-          { speaker: "Man", text: "I wouldn't have bought these cherries had I known that grapes were so cheap." },
-          { speaker: "Narrator", text: "What does the man mean?" }
-        ],
-        spokenQuestion: "What does the man mean?",
-        options: [
-          "A) He bought grapes because they were cheap.",
-          "B) He wishes he had known how inexpensive the grapes were.",
-          "C) He prefers cherries to grapes.",
-          "D) He bought both cherries and grapes."
-        ],
-        correct: 1,
-        explanation: "The conditional inversion 'had I known that grapes were so cheap' implies he did not know grapes were cheap, and regrets buying the expensive cherries."
-      },
-      {
-        id: 2,
-        part: "Part A",
-        type: "Short Dialogue",
-        script: [
-          { speaker: "Man", text: "Were you upset by what Richard said to you?" },
-          { speaker: "Woman", text: "I couldn't have been more infuriated." },
-          { speaker: "Narrator", text: "What does the woman mean?" }
-        ],
-        spokenQuestion: "What does the woman mean?",
-        options: [
-          "A) She was slightly annoyed.",
-          "B) She was extremely angry with Richard.",
-          "C) Richard was furious with her.",
-          "D) She did not hear what Richard said."
-        ],
-        correct: 1,
-        explanation: "'I couldn't have been more infuriated' is a superlative expression meaning she was at the maximum peak of anger."
-      },
-      {
-        id: 3,
-        part: "Part A",
-        type: "Short Dialogue",
-        script: [
-          { speaker: "Man", text: "How is your boss feeling about his retirement?" },
-          { speaker: "Woman", text: "Oh, he isn't too unhappy to be retiring." },
-          { speaker: "Narrator", text: "What does the woman imply about her boss?" }
-        ],
-        spokenQuestion: "What does the woman imply about her boss?",
-        options: [
-          "A) Her boss is eager and happy to retire.",
-          "B) Her boss is depressed about leaving his job.",
-          "C) Her boss does not want to retire yet.",
-          "D) Her boss is completely indifferent."
-        ],
-        correct: 0,
-        explanation: "The double-negative litotes 'isn't too unhappy to be retiring' means he is actually quite pleased and looking forward to retirement."
-      },
-      {
-        id: 4,
-        part: "Part A",
-        type: "Short Dialogue",
-        script: [
-          { speaker: "Man", text: "Why were you thanking Tom?" },
-          { speaker: "Woman", text: "He lent me enough money to pay the rent." },
-          { speaker: "Narrator", text: "What does the woman mean?" }
-        ],
-        spokenQuestion: "What does the woman mean?",
-        options: [
-          "A) Tom paid her rent for free.",
-          "B) Tom loaned her the funds needed for rent.",
-          "C) She gave Tom money for his rent.",
-          "D) She couldn't pay her rent this month."
-        ],
-        correct: 1,
-        explanation: "The woman states that Tom lent her the necessary money so she could pay her rent on time."
-      },
-      {
-        id: 5,
-        part: "Part A",
-        type: "Short Dialogue",
-        script: [
-          { speaker: "Woman", text: "Do you know where Debbie is?" },
-          { speaker: "Man", text: "Her purse is still here, so she must still be in the apartment." },
-          { speaker: "Narrator", text: "What does the man say about Debbie?" }
-        ],
-        spokenQuestion: "What does the man say about Debbie?",
-        options: [
-          "A) Debbie left her purse at the store.",
-          "B) Debbie has definitely left the building.",
-          "C) Debbie is probably somewhere in the apartment.",
-          "D) Debbie lost her purse inside the apartment."
-        ],
-        correct: 2,
-        explanation: "The logical deduction 'she must still be in the apartment' indicates high probability that she is still inside."
-      },
-      {
-        id: 6,
-        part: "Part A",
-        type: "Short Dialogue",
-        script: [
-          { speaker: "Woman", text: "How did Chuck look when you visited him in the hospital?" },
-          { speaker: "Man", text: "He's looked better." },
-          { speaker: "Narrator", text: "What does the man mean?" }
-        ],
-        spokenQuestion: "What does the man mean?",
-        options: [
-          "A) Chuck was in great physical condition.",
-          "B) Chuck did not look very well.",
-          "C) Chuck looks better than anyone else.",
-          "D) Chuck was discharged from the hospital."
-        ],
-        correct: 1,
-        explanation: "The idiom 'He has looked better' is an understated way of saying someone looks sickly or unwell."
-      },
-      {
-        id: 7,
-        part: "Part A",
-        type: "Short Dialogue",
-        script: [
-          { speaker: "Man", text: "Let me just get these last plates put away, then I'll be ready to go." },
-          { speaker: "Woman", text: "So you did do the dishes." },
-          { speaker: "Narrator", text: "What had the woman assumed?" }
-        ],
-        spokenQuestion: "What had the woman assumed?",
-        options: [
-          "A) She assumed he had already put away the dishes.",
-          "B) She assumed he hadn't done the dishes.",
-          "C) She thought he broke the dishes.",
-          "D) She wanted him to leave the plates out."
-        ],
-        correct: 1,
-        explanation: "Her emphatic surprise 'So you did do the dishes' reveals she had previously assumed he had not washed them."
-      },
-      {
-        id: 8,
-        part: "Part A",
-        type: "Short Dialogue",
-        script: [
-          { speaker: "Man", text: "What did the professor do in the first class? I missed it because I was late." },
-          { speaker: "Woman", text: "She outlined the course requirements." },
-          { speaker: "Narrator", text: "What does the woman mean?" }
-        ],
-        spokenQuestion: "What does the woman mean?",
-        options: [
-          "A) The professor gave a difficult test.",
-          "B) The professor summarized what is expected in the course.",
-          "C) The professor dismissed the class early.",
-          "D) The professor assigned the first reading."
-        ],
-        correct: 1,
-        explanation: "'Outlined the course requirements' means she presented a summary of what students must complete for the course."
-      },
-      {
-        id: 9,
-        part: "Part A",
-        type: "Short Dialogue",
-        script: [
-          { speaker: "Man", text: "Help you find something?" },
-          { speaker: "Woman", text: "Yes, thank you. I need to get a new rug." },
-          { speaker: "Narrator", text: "What does the woman mean?" }
-        ],
-        spokenQuestion: "What does the woman mean?",
-        options: [
-          "A) She wants to clean her carpet.",
-          "B) She wants to purchase a floor covering.",
-          "C) She is looking for a lost rug.",
-          "D) She works at a department store."
-        ],
-        correct: 1,
-        explanation: "She is shopping to purchase a new rug (a floor covering)."
-      },
-      {
-        id: 10,
-        part: "Part A",
-        type: "Short Dialogue",
-        script: [
-          { speaker: "Man", text: "Why are you so late getting here?" },
-          { speaker: "Woman", text: "Oh, I ran into my cousin Carl, and we stayed and talked for a while." },
-          { speaker: "Narrator", text: "What does the woman mean?" }
-        ],
-        spokenQuestion: "What does the woman mean?",
-        options: [
-          "A) She was delayed because she met and spoke with a relative.",
-          "B) She had a car accident with her cousin.",
-          "C) She went for a run with Carl.",
-          "D) Carl prevented her from leaving the house."
-        ],
-        correct: 0,
-        explanation: "'Ran into my cousin Carl' means she unexpectedly met her cousin, and chatting caused her delay."
-      },
-
-      // PART B: Longer Conversation (Space Debris Q11 - Q14)
-      {
-        id: 11,
-        part: "Part B",
-        type: "Longer Conversation",
-        script: [
-          { speaker: "Woman", text: "Have you ever thought about all the tons of garbage that's out in space circling the Earth? ... tons of metal traveling at 17,000 miles per hour." },
-          { speaker: "Narrator", text: "What are the man and woman discussing?" }
-        ],
-        spokenQuestion: "What are the man and woman discussing?",
-        options: [
-          "A) Travel to Mars.",
-          "B) Trash and junk orbiting in outer space.",
-          "C) The speed of modern satellites.",
-          "D) The history of rocket manufacturing."
-        ],
-        correct: 1,
-        explanation: "Their dialogue centers on orbital debris, space trash, and junk circling the Earth."
-      },
-      {
-        id: 12,
-        part: "Part B",
-        type: "Longer Conversation",
-        script: [
-          { speaker: "Woman", text: "I saw a television program about it last night, and according to the program, there's about 3,000 tons of metal out there in space." },
-          { speaker: "Narrator", text: "Where did the woman learn about this problem?" }
-        ],
-        spokenQuestion: "Where did the woman learn about this problem?",
-        options: [
-          "A) In an astronomy class.",
-          "B) On a television program the previous night.",
-          "C) From a space scientist.",
-          "D) In a newspaper article."
-        ],
-        correct: 1,
-        explanation: "She explicitly says she saw a television program about it the previous night."
-      },
-      {
-        id: 13,
-        part: "Part B",
-        type: "Longer Conversation",
-        script: [
-          { speaker: "Woman", text: "...there's about 3,000 tons of metal out there in space, traveling at speeds around 17,000 miles per hour." },
-          { speaker: "Narrator", text: "Approximately how much metal is in orbit in space?" }
-        ],
-        spokenQuestion: "Approximately how much metal is in orbit in space?",
-        options: [
-          "A) 17,000 tons",
-          "B) 1957 pounds",
-          "C) About 3,000 tons",
-          "D) 300 tons"
-        ],
-        correct: 2,
-        explanation: "She states there are 'about 3,000 tons of metal out there in space'."
-      },
-      {
-        id: 14,
-        part: "Part B",
-        type: "Longer Conversation",
-        script: [
-          { speaker: "Woman", text: "Hopefully, they'll be able to find solutions before the problem gets too much worse." },
-          { speaker: "Narrator", text: "What does the woman hope will happen?" }
-        ],
-        spokenQuestion: "What does the woman hope will happen?",
-        options: [
-          "A) That space missions will be banned.",
-          "B) That scientists will find solutions before the problem worsens.",
-          "C) That more rockets will be launched.",
-          "D) That junk falls harmlessly into the ocean."
-        ],
-        correct: 1,
-        explanation: "She hopes scientists studying the problem will discover effective solutions before collisions or damage worsen."
+    // --- EXAM DATA: EXACTLY 10 LISTENING, 20 STRUCTURE, 20 READING = 50 TOTAL ---
+    const EXAM_DATABASE = {
+      listening: {
+        id: 'listening',
+        name: 'Section 1: Listening Comprehension',
+        questions: [
+          {
+            id: 1,
+            part: "Part A",
+            type: "Short Dialogue",
+            script: [
+              { speaker: "Woman", text: "Why did you get that kind of fruit?" },
+              { speaker: "Man", text: "I wouldn't have bought these cherries had I known that grapes were so cheap." },
+              { speaker: "Narrator", text: "What does the man mean?" }
+            ],
+            spokenQuestion: "What does the man mean?",
+            options: [
+              "A) He bought grapes because they were cheap.",
+              "B) He wishes he had known how inexpensive the grapes were.",
+              "C) He prefers cherries to grapes.",
+              "D) He bought both cherries and grapes."
+            ],
+            correct: 1,
+            explanation: "The conditional inversion 'had I known that grapes were so cheap' reveals he did not know grapes were inexpensive, and regrets spending more on cherries."
+          },
+          {
+            id: 2,
+            part: "Part A",
+            type: "Short Dialogue",
+            script: [
+              { speaker: "Man", text: "Were you upset by what Richard said to you?" },
+              { speaker: "Woman", text: "I couldn't have been more infuriated." },
+              { speaker: "Narrator", text: "What does the woman mean?" }
+            ],
+            spokenQuestion: "What does the woman mean?",
+            options: [
+              "A) She was slightly annoyed.",
+              "B) She was extremely angry with Richard.",
+              "C) Richard was furious with her.",
+              "D) She did not hear what Richard said."
+            ],
+            correct: 1,
+            explanation: "'I couldn't have been more infuriated' is an emphatic superlative meaning her anger was at the highest possible level."
+          },
+          {
+            id: 3,
+            part: "Part A",
+            type: "Short Dialogue",
+            script: [
+              { speaker: "Man", text: "How is your boss feeling about his retirement?" },
+              { speaker: "Woman", text: "Oh, he isn't too unhappy to be retiring." },
+              { speaker: "Narrator", text: "What does the woman imply about her boss?" }
+            ],
+            spokenQuestion: "What does the woman imply about her boss?",
+            options: [
+              "A) Her boss is quite pleased to retire.",
+              "B) Her boss is depressed about leaving his job.",
+              "C) Her boss does not want to retire yet.",
+              "D) Her boss is completely indifferent."
+            ],
+            correct: 0,
+            explanation: "The understatement 'isn't too unhappy to be retiring' indicates he is actually looking forward to and happy about retirement."
+          },
+          {
+            id: 4,
+            part: "Part A",
+            type: "Short Dialogue",
+            script: [
+              { speaker: "Man", text: "Why were you thanking Tom?" },
+              { speaker: "Woman", text: "He lent me enough money to pay the rent." },
+              { speaker: "Narrator", text: "What does the woman mean?" }
+            ],
+            spokenQuestion: "What does the woman mean?",
+            options: [
+              "A) Tom gave her money as a gift.",
+              "B) Tom loaned her the funds needed for rent.",
+              "C) She paid rent for Tom.",
+              "D) She was evicted from her apartment."
+            ],
+            correct: 1,
+            explanation: "She confirms that Tom lent her the necessary money so she could fulfill her rent payment."
+          },
+          {
+            id: 5,
+            part: "Part A",
+            type: "Short Dialogue",
+            script: [
+              { speaker: "Woman", text: "Do you know where Debbie is?" },
+              { speaker: "Man", text: "Her purse is still here, so she must still be in the apartment." },
+              { speaker: "Narrator", text: "What does the man say about Debbie?" }
+            ],
+            spokenQuestion: "What does the man say about Debbie?",
+            options: [
+              "A) Debbie left her purse at work.",
+              "B) Debbie has definitely left the building.",
+              "C) Debbie is probably somewhere in the apartment.",
+              "D) Debbie lost her purse inside the apartment."
+            ],
+            correct: 2,
+            explanation: "The logical deduction 'she must still be in the apartment' expresses a strong conclusion based on seeing her purse."
+          },
+          {
+            id: 6,
+            part: "Part A",
+            type: "Short Dialogue",
+            script: [
+              { speaker: "Woman", text: "How did Chuck look when you visited him in the hospital?" },
+              { speaker: "Man", text: "He's looked better." },
+              { speaker: "Narrator", text: "What does the man mean?" }
+            ],
+            spokenQuestion: "What does the man mean?",
+            options: [
+              "A) Chuck was in great physical health.",
+              "B) Chuck looked ill or not very well.",
+              "C) Chuck looks better than anyone else.",
+              "D) Chuck was discharged from the hospital."
+            ],
+            correct: 1,
+            explanation: "The idiom 'He has looked better' is an understated remark meaning someone looks sickly, pale, or unwell."
+          },
+          {
+            id: 7,
+            part: "Part A",
+            type: "Short Dialogue",
+            script: [
+              { speaker: "Man", text: "Let me just get these last plates put away, then I'll be ready to go." },
+              { speaker: "Woman", text: "So you did do the dishes." },
+              { speaker: "Narrator", text: "What had the woman assumed?" }
+            ],
+            spokenQuestion: "What had the woman assumed?",
+            options: [
+              "A) She assumed he had already finished.",
+              "B) She assumed he had not done the dishes.",
+              "C) She assumed the dishes were broken.",
+              "D) She wanted him to buy new dishes."
+            ],
+            correct: 1,
+            explanation: "Her surprise 'So you did do the dishes' demonstrates that she had previously assumed he had neglected them."
+          },
+          {
+            id: 8,
+            part: "Part A",
+            type: "Short Dialogue",
+            script: [
+              { speaker: "Man", text: "What did the professor do in the first class? I missed it because I was late." },
+              { speaker: "Woman", text: "She outlined the course requirements." },
+              { speaker: "Narrator", text: "What does the woman mean?" }
+            ],
+            spokenQuestion: "What does the woman mean?",
+            options: [
+              "A) The professor administered a test.",
+              "B) The professor summarized what is expected in the course.",
+              "C) The professor canceled the first lecture.",
+              "D) The professor assigned the final project."
+            ],
+            correct: 1,
+            explanation: "'Outlined the course requirements' means giving a structured overview of what the course will require."
+          },
+          {
+            id: 9,
+            part: "Part A",
+            type: "Short Dialogue",
+            script: [
+              { speaker: "Man", text: "Help you find something?" },
+              { speaker: "Woman", text: "Yes, thank you. I need to get a new rug." },
+              { speaker: "Narrator", text: "What does the woman mean?" }
+            ],
+            spokenQuestion: "What does the woman mean?",
+            options: [
+              "A) She wants to clean her floor.",
+              "B) She is shopping to buy a floor covering.",
+              "C) She lost a valuable rug.",
+              "D) She works in the home department."
+            ],
+            correct: 1,
+            explanation: "She is shopping for and wishes to buy a new rug (a floor covering)."
+          },
+          {
+            id: 10,
+            part: "Part A",
+            type: "Short Dialogue",
+            script: [
+              { speaker: "Man", text: "Why are you so late getting here?" },
+              { speaker: "Woman", text: "Oh, I ran into my cousin Carl, and we stayed and talked for a while." },
+              { speaker: "Narrator", text: "What does the woman mean?" }
+            ],
+            spokenQuestion: "What does the woman mean?",
+            options: [
+              "A) She was delayed because she met and spoke with a relative.",
+              "B) She had a collision with her cousin's car.",
+              "C) She was jogging with Carl.",
+              "D) Carl prevented her from leaving."
+            ],
+            correct: 0,
+            explanation: "'Ran into my cousin Carl' is an idiom meaning she unexpectedly met her cousin, and chatting delayed her arrival."
+          }
+        ]
       },
 
-      // PART C: Sociology Lecture (Term Paper Requirements Q15 - Q18)
-      {
-        id: 15,
-        part: "Part C",
-        type: "Academic Lecture",
-        script: [
-          { speaker: "Professor", text: "Before I start today's sociology lecture, I'd like to talk with you about the papers that you should be working on." },
-          { speaker: "Narrator", text: "When does this talk probably take place?" }
-        ],
-        spokenQuestion: "When does this talk probably take place?",
-        options: [
-          "A) At the end of the semester.",
-          "B) Before beginning a sociology lecture.",
-          "C) During library research hours.",
-          "D) After grading the papers."
-        ],
-        correct: 1,
-        explanation: "The professor begins by stating: 'Before I start today's sociology lecture, I'd like to talk with you...'"
+      structure: {
+        id: 'structure',
+        name: 'Section 2: Structure & Written Expression',
+        questions: [
+          // Q1 - Q12: Sentence Completion
+          {
+            id: 1,
+            type: "Sentence Completion",
+            prompt: "Not only _______ critical nutrients to the coastal marshland, but it also buffers communities against seasonal storms.",
+            options: ["A) does the barrier island provide", "B) the barrier island provides", "C) providing the barrier island", "D) the island providing"],
+            correct: 0,
+            explanation: "Inversion rule after negative adverbial 'Not only': auxiliary 'does' precedes the subject 'the barrier island'."
+          },
+          {
+            id: 2,
+            type: "Sentence Completion",
+            prompt: "_______ by strong arctic air masses, the citrus groves sustained severe freezing injury.",
+            options: ["A) Caught", "B) Having caught", "C) Caught them", "D) In which caught"],
+            correct: 0,
+            explanation: "Past participial adjective phrase 'Caught by strong arctic air masses' correctly modifies 'the citrus groves'."
+          },
+          {
+            id: 3,
+            type: "Sentence Completion",
+            prompt: "The speed of seismic sound waves traveling through granite is approximately three times _______ through sandstone.",
+            options: ["A) faster than that", "B) that is faster", "C) faster", "D) as fast than"],
+            correct: 0,
+            explanation: "'Faster than that' provides both the comparative adjective and the pronoun 'that' referring to 'the speed'."
+          },
+          {
+            id: 4,
+            type: "Sentence Completion",
+            prompt: "Geologists estimate that deep beneath the volcanic crater _______ immense reservoirs of magma.",
+            options: ["A) lie", "B) which lie", "C) lying", "D) to lie"],
+            correct: 0,
+            explanation: "Inverted locative clause: 'deep beneath the volcanic crater lie immense reservoirs' requires the finite plural verb 'lie'."
+          },
+          {
+            id: 5,
+            type: "Sentence Completion",
+            prompt: "The development of graphene has enabled promising engineering innovations, _______ flexible solar conductors and ultra-capacitors.",
+            options: ["A) including", "B) included", "C) which it includes", "D) that includes"],
+            correct: 0,
+            explanation: "Prepositional participle 'including' correctly introduces non-restrictive exemplar elements."
+          },
+          {
+            id: 6,
+            type: "Sentence Completion",
+            prompt: "Seldom _______ a total solar eclipse cast its shadow over such a densely populated metropolitan corridor.",
+            options: ["A) does", "B) it does", "C) when does", "D) having"],
+            correct: 0,
+            explanation: "Inversion after restrictive negative adverb 'Seldom': auxiliary verb 'does' must precede the subject 'a total solar eclipse'."
+          },
+          {
+            id: 7,
+            type: "Sentence Completion",
+            prompt: "Osmosis is the spontaneous physical process _______ solvent molecules pass through a semipermeable membrane.",
+            options: ["A) by which", "B) which", "C) in that", "D) that by"],
+            correct: 0,
+            explanation: "'By which' pairs the preposition 'by' with the relative pronoun 'which' meaning 'by means of which process'."
+          },
+          {
+            id: 8,
+            type: "Sentence Completion",
+            prompt: "_______ her doctoral research ahead of schedule, Dr. Patel presented her empirical findings at the national conference.",
+            options: ["A) Having completed", "B) She had completed", "C) To complete", "D) Completed"],
+            correct: 0,
+            explanation: "Perfect participle 'Having completed' shows an action finished prior to the main clause predicate 'presented'."
+          },
+          {
+            id: 9,
+            type: "Sentence Completion",
+            prompt: "It was in the late nineteenth century _______ the alternating electrical current grid gained widespread commercial adoption.",
+            options: ["A) that", "B) when", "C) while", "D) what"],
+            correct: 0,
+            explanation: "Cleft construction: 'It was [prepositional phrase] that...' requires 'that'."
+          },
+          {
+            id: 10,
+            type: "Sentence Completion",
+            prompt: "Neither the lead investigator nor the graduate assistants _______ able to replicate the anomalous test results.",
+            options: ["A) were", "B) was", "C) being", "D) have"],
+            correct: 0,
+            explanation: "Subject-verb proximity with correlative 'Neither... nor': verb agrees with the closer plural subject 'graduate assistants' ('were')."
+          },
+          {
+            id: 11,
+            type: "Sentence Completion",
+            prompt: "Modern aviation design permits aircraft wings to flex significantly in flight, _______ composite carbon fiber construction.",
+            options: ["A) thanks to", "B) despite", "C) because", "D) whereas"],
+            correct: 0,
+            explanation: "'Thanks to' functions as a causal prepositional idiom followed by the noun phrase."
+          },
+          {
+            id: 12,
+            type: "Sentence Completion",
+            prompt: "The faculty committee recommended that the department _______ its curriculum to incorporate computational data science.",
+            options: ["A) revise", "B) revises", "C) revised", "D) will revise"],
+            correct: 0,
+            explanation: "Subjunctive mood after verbs of recommendation: requires the base form of the verb ('revise')."
+          },
+
+          // Q13 - Q20: Written Expression (Error Identification)
+          {
+            id: 13,
+            type: "Error Identification",
+            prompt: "The [A: amazonite crystal] is prized for [B: its] vivid turquoise color, which [C: make] it highly [D: coveted] among gem collectors.",
+            options: ["A) amazonite crystal", "B) its", "C) make", "D) coveted"],
+            correct: 2,
+            explanation: "Subject-verb agreement error: The relative pronoun 'which' refers to singular noun 'color', so verb must be 'makes', not 'make'."
+          },
+          {
+            id: 14,
+            type: "Error Identification",
+            prompt: "Economic analysts [A: generally] agree that the commercial boom of the 1920s [B: resulted] in [C: unprecedented] consumer [D: expend].",
+            options: ["A) generally", "B) resulted", "C) unprecedented", "D) expend"],
+            correct: 3,
+            explanation: "Part of speech error: The noun 'expenditure' or 'spending' is required after adjective 'consumer', not the base verb 'expend'."
+          },
+          {
+            id: 15,
+            type: "Error Identification",
+            prompt: "Despite [A: they are] situated in [B: extremely arid] environments, cacti retain [C: sufficient] hydration to withstand prolonged [D: droughts].",
+            options: ["A) they are", "B) extremely arid", "C) sufficient", "D) droughts"],
+            correct: 0,
+            explanation: "Conjunction error: 'Despite' is a preposition and cannot precede a full finite clause ('they are'). Change to 'Although they are' or 'Despite being'."
+          },
+          {
+            id: 16,
+            type: "Error Identification",
+            prompt: "Bioluminescent marine algae emit a [A: visible] blue illumination that [B: startles] predators, thereby [C: facilitate] escape in [D: darkened] waters.",
+            options: ["A) visible", "B) startles", "C) facilitate", "D) darkened"],
+            correct: 2,
+            explanation: "Participle error: Following 'thereby', the present participle 'facilitating' is required to describe the consequent outcome."
+          },
+          {
+            id: 17,
+            type: "Error Identification",
+            prompt: "Although foraging bees [A: can navigate] by polarized sunlight, dense fog [B: severely] impairs their [C: capable] to locate [D: floral nectar].",
+            options: ["A) can navigate", "B) severely", "C) capable", "D) floral nectar"],
+            correct: 2,
+            explanation: "Word form error: Possessive pronoun 'their' must be followed by the abstract noun 'capability' or 'ability', not adjective 'capable'."
+          },
+          {
+            id: 18,
+            type: "Error Identification",
+            prompt: "Each specimen in the archive must be [A: categorize] systematically before [B: being cataloged] into the [C: digital] institutional [D: repository].",
+            options: ["A) categorize", "B) being cataloged", "C) digital", "D) repository"],
+            correct: 0,
+            explanation: "Passive voice error: Modal passive 'must be' requires the past participle form 'categorized', not base verb 'categorize'."
+          },
+          {
+            id: 19,
+            type: "Error Identification",
+            prompt: "Archaeologists recently [A: unearthed] ceramic fragments [B: nearly identical] to those [C: produce] during the Shang [D: dynasty].",
+            options: ["A) unearthed", "B) nearly identical", "C) produce", "D) dynasty"],
+            correct: 2,
+            explanation: "Past participial modifier error: The participle 'produced' is needed to modify the pronoun 'those' (ceramic fragments)."
+          },
+          {
+            id: 20,
+            type: "Error Identification",
+            prompt: "Marine mammals such as seals [A: must surface] frequently [B: because of] their respiratory anatomy [C: requires] atmospheric [D: oxygen].",
+            options: ["A) must surface", "B) because of", "C) requires", "D) oxygen"],
+            correct: 1,
+            explanation: "Conjunction error: 'Because of' is followed by a noun phrase, whereas here a full subject-predicate clause follows. It should simply be 'because'."
+          }
+        ]
       },
-      {
-        id: 16,
-        part: "Part C",
-        type: "Academic Lecture",
-        script: [
-          { speaker: "Professor", text: "The paper itself is due in two weeks, but I would like to see your outlines by Friday of this week..." },
-          { speaker: "Narrator", text: "When is the paper due?" }
+
+      reading: {
+        id: 'reading',
+        name: 'Section 3: Reading Comprehension',
+        passages: [
+          {
+            id: 'p1',
+            title: "Passage 1: Circadian Clocks in Intertidal Organisms",
+            paragraphs: [
+              "Circadian rhythms—internal biological pacemakers oscillating with an approximate 24-hour periodicity—are ubiquitous among terrestrial plants and animals. However, in intertidal marine habitats, organisms face a far more complex chronobiological challenge. They must synchronize their physiological processes not only with the diurnal day-night cycle driven by the Sun, but also with the lunar semidiurnal tidal cycles driven by the gravitational pull of the Moon, which recur roughly every 12.4 hours (or approximately 24.8 hours for two complete high and low cycles).",
+              "A prime exemplar of dual-clock adaptation is observed in the fiddler crab (genus Uca). When maintained under constant ambient laboratory conditions without tidal fluctuations or light cues, fiddler crabs retain an innate circadian color-change rhythm. Their carapace darkens during subjective solar daytime to shield vulnerable internal organs from ultraviolet radiation, and lightens at night. Simultaneously, fiddler crabs exhibit a circatidal locomotor cycle, with maximum foraging activity occurring during expected low tide when their native mudflats would be exposed.",
+              "For decades, chronobiologists debated whether a single central pacemaker modulated both behaviors or whether distinct, decoupled oscillators operated independently. Recent biochemical and pharmacological interventions have substantiated the dual-oscillator model. Administering melatonin receptor antagonists selectively suppresses the solar circadian pigment cycle without disrupting circatidal foraging sprints. This functional decoupling represents an exquisite evolutionary specialization, enabling intertidal organisms to maintain cellular metabolic homeostasis while exploiting transient tidal feeding windows."
+            ]
+          },
+          {
+            id: 'p2',
+            title: "Passage 2: The Trans-Eurasian Silk Road Commerce",
+            paragraphs: [
+              "The trans-Eurasian trade network historically termed the 'Silk Road' was never a single paved highway. Rather, it comprised a shifting web of desert tracks, mountain passes, and oasis caravan routes spanning over 6,400 kilometers between Chang'an (modern Xi'an, China) and Mediterranean ports such as Antioch and Alexandria. Named in 1877 by the German geographer Ferdinand von Richthofen after China's lucrative textile monopoly, the routes facilitated an exchange of goods far more varied than luxury silk.",
+              "Central Asian pastoral communities, notably Sogdian merchants, functioned as the indispensable intermediaries of transcontinental overland exchange. Their mastery of multilingual diplomacy, oasis trading post settlements, and pack-animal logistics enabled them to transport high-value, low-bulk commodities—including raw jade, lapis lazuli, frankincense, glassware, and medicinal rhubarb—across perilous physical barriers such as the Taklamakan Desert and the Pamir Mountains. Bactrian camels, possessing wide padded feet and exceptional cold-arid endurance, served as the primary pack animals.",
+              "Yet the most transformative cargo traveling the Silk Road was intangible: ideas, belief systems, and technologies. Mahayana Buddhism migrated along northern caravan corridors from the Indian subcontinent into China and Korea, reshaping East Asian cultural landscapes. Reciprocally, Chinese sericulture techniques and paper manufacturing traveled west into the Islamic world, eventually reaching Europe. Thus, the Silk Road established an enduring paradigm of pre-modern globalization that stimulated economic and cultural vitality across Afro-Eurasia for over a millennium."
+            ]
+          }
         ],
-        spokenQuestion: "When is the paper due?",
-        options: [
-          "A) This Friday",
-          "B) In two weeks",
-          "C) At the end of next month",
-          "D) Tomorrow morning"
-        ],
-        correct: 1,
-        explanation: "The outline is due this Friday, but the paper itself is due 'in two weeks'."
-      },
-      {
-        id: 17,
-        part: "Part C",
-        type: "Academic Lecture",
-        script: [
-          { speaker: "Professor", text: "I would like you to have at least three books and at least three recent journal articles as sources." },
-          { speaker: "Narrator", text: "What types of references should be used in writing the paper?" }
-        ],
-        spokenQuestion: "What types of references should be used in writing the paper?",
-        options: [
-          "A) Only internet websites",
-          "B) At least 3 books and at least 3 recent journal articles",
-          "C) Five encyclopedias",
-          "D) Interviews with police officers"
-        ],
-        correct: 1,
-        explanation: "The professor requires at least three books and at least three recent journal articles."
-      },
-      {
-        id: 18,
-        part: "Part C",
-        type: "Academic Lecture",
-        script: [
-          { speaker: "Professor", text: "The paper should be five pages long. In addition to the five pages of composition, you should have a title page, and a one-page reference list..." },
-          { speaker: "Narrator", text: "How many total pages should be in the paper, including the title page and the reference list?" }
-        ],
-        spokenQuestion: "How many total pages should be in the paper, including the title page and the reference list?",
-        options: [
-          "A) 5 pages",
-          "B) 6 pages",
-          "C) 7 pages",
-          "D) 8 pages"
-        ],
-        correct: 2,
-        explanation: "5 pages of composition + 1 title page + 1 reference list page = 7 total pages."
+        questions: [
+          // Passage 1: Q1 to Q10
+          {
+            id: 1,
+            passageId: 'p1',
+            type: "Main Idea",
+            prompt: "What is the primary topic of Passage 1?",
+            options: [
+              "A) How gravitational forces generate ocean tides.",
+              "B) The interaction of circadian and circatidal biological clocks in intertidal organisms.",
+              "C) The migration routes of deep-sea invertebrates.",
+              "D) Laboratory lighting techniques for marine research."
+            ],
+            correct: 1,
+            explanation: "The passage focuses on how intertidal organisms like the fiddler crab coordinate both circadian (solar) and circatidal (lunar) biological clocks."
+          },
+          {
+            id: 2,
+            passageId: 'p1',
+            type: "Vocabulary",
+            prompt: "The word 'ubiquitous' in paragraph 1 is closest in meaning to:",
+            options: ["A) Widespread / omnipresent", "B) Primitive", "C) Delicate", "D) Unpredictable"],
+            correct: 0,
+            explanation: "'Ubiquitous' means existing or being found everywhere in large numbers."
+          },
+          {
+            id: 3,
+            passageId: 'p1',
+            type: "Factual Information",
+            prompt: "According to paragraph 1, how often does a full semidiurnal tidal cycle repeat?",
+            options: ["A) Exactly every 6 hours", "B) Approximately every 24.8 hours", "C) Once every 7 days", "D) Once a month during full moon"],
+            correct: 1,
+            explanation: "Paragraph 1 notes two high and two low cycles recur 'approximately 24.8 hours'."
+          },
+          {
+            id: 4,
+            passageId: 'p1',
+            type: "Factual Information",
+            prompt: "Why does the fiddler crab's carapace darken during solar daytime?",
+            options: [
+              "A) To attract potential mates on the mudflats.",
+              "B) To shield vulnerable internal organs from ultraviolet radiation.",
+              "C) To blend into dark ocean mud.",
+              "D) To absorb oceanic minerals."
+            ],
+            correct: 1,
+            explanation: "Paragraph 2 explicitly states the shell darkens 'to shield vulnerable internal organs from ultraviolet radiation'."
+          },
+          {
+            id: 5,
+            passageId: 'p1',
+            type: "Factual Information",
+            prompt: "When does the fiddler crab's circatidal clock trigger peak movement activity?",
+            options: ["A) During peak high tide", "B) At subjective midnight", "C) During expected low tide", "D) Exclusively at dawn"],
+            correct: 2,
+            explanation: "Paragraph 2 states locomotor activity peaks 'during expected low tide when their native mudflats would be exposed'."
+          },
+          {
+            id: 6,
+            passageId: 'p1',
+            type: "Vocabulary",
+            prompt: "The word 'substantiated' in paragraph 3 is closest in meaning to:",
+            options: ["A) Disproved", "B) Confirmed / verified", "C) Delayed", "D) Weakened"],
+            correct: 1,
+            explanation: "'Substantiated' means established or verified with empirical scientific evidence."
+          },
+          {
+            id: 7,
+            passageId: 'p1',
+            type: "Factual Information",
+            prompt: "What occurred when researchers administered melatonin receptor antagonists to fiddler crabs?",
+            options: [
+              "A) Both biological clocks stopped permanently.",
+              "B) Circadian pigment changes were halted while circatidal foraging remained normal.",
+              "C) The crabs lost their ability to forage.",
+              "D) Shell color changed twice as fast."
+            ],
+            correct: 1,
+            explanation: "Paragraph 3 explains that antagonists 'selectively suppresses the solar circadian pigment cycle without disrupting circatidal foraging sprints'."
+          },
+          {
+            id: 8,
+            passageId: 'p1',
+            type: "Inference",
+            prompt: "What model do recent biochemical findings substantiate?",
+            options: ["A) The single central pacemaker model", "B) The dual-oscillator model", "C) The purely passive behavioral model", "D) The solar-only model"],
+            correct: 1,
+            explanation: "Paragraph 3 explicitly affirms that interventions 'have substantiated the dual-oscillator model'."
+          },
+          {
+            id: 9,
+            passageId: 'p1',
+            type: "Vocabulary",
+            prompt: "The word 'exquisite' in paragraph 3 is closest in meaning to:",
+            options: ["A) Highly refined and effective", "B) Clumsy", "C) Expensive", "D) Hazardous"],
+            correct: 0,
+            explanation: "In this evolutionary biology context, 'exquisite' refers to an intricate, highly refined specialization."
+          },
+          {
+            id: 10,
+            passageId: 'p1',
+            type: "Inference",
+            prompt: "According to the passage, why is functional clock decoupling advantageous for intertidal animals?",
+            options: [
+              "A) It allows them to swim across deep ocean trenches.",
+              "B) It balances internal homeostatic needs with transient tidal feeding opportunities.",
+              "C) It prevents them from ever needing rest.",
+              "D) It makes them immune to water temperature fluctuations."
+            ],
+            correct: 1,
+            explanation: "The final sentence states decoupling enables them 'to maintain cellular metabolic homeostasis while exploiting transient tidal feeding windows'."
+          },
+
+          // Passage 2: Q11 to Q20
+          {
+            id: 11,
+            passageId: 'p2',
+            type: "Factual Information",
+            prompt: "What does the author emphasize about the physical nature of the Silk Road in paragraph 1?",
+            options: [
+              "A) It was a single continuous paved Roman highway.",
+              "B) It was a shifting web of desert tracks, mountain passes, and caravan routes.",
+              "C) It was exclusively a maritime shipping lane.",
+              "D) It remained unchanged for over 2,000 years."
+            ],
+            correct: 1,
+            explanation: "Paragraph 1 points out it 'was never a single paved highway. Rather, it comprised a shifting web of desert tracks, mountain passes, and oasis caravan routes'."
+          },
+          {
+            id: 12,
+            passageId: 'p2',
+            type: "Factual Information",
+            prompt: "Who coined the term 'Silk Road' in 1877?",
+            options: ["A) Antioch merchants", "B) Ferdinand von Richthofen", "C) Sogdian diplomats", "D) Chang'an officials"],
+            correct: 1,
+            explanation: "Paragraph 1 mentions it was named in 1877 by 'the German geographer Ferdinand von Richthofen'."
+          },
+          {
+            id: 13,
+            passageId: 'p2',
+            type: "Vocabulary",
+            prompt: "The word 'lucrative' in paragraph 1 is closest in meaning to:",
+            options: ["A) Highly profitable", "B) Dangerous", "C) Secret", "D) Fragile"],
+            correct: 0,
+            explanation: "'Lucrative' means producing a great deal of profit or wealth."
+          },
+          {
+            id: 14,
+            passageId: 'p2',
+            type: "Factual Information",
+            prompt: "Which group of people is highlighted as the primary intermediaries of transcontinental commerce?",
+            options: ["A) Sogdian merchants", "B) Venetian sailors", "C) Egyptian farmers", "D) Roman legionnaires"],
+            correct: 0,
+            explanation: "Paragraph 2 states: 'Central Asian pastoral communities, notably Sogdian merchants, functioned as the indispensable intermediaries'."
+          },
+          {
+            id: 15,
+            passageId: 'p2',
+            type: "Inference",
+            prompt: "Why were trade goods on overland caravan routes typically 'high-value and low-bulk'?",
+            options: [
+              "A) Pack animals were forbidden by law from carrying large items.",
+              "B) Treacherous mountain and desert terrain made bulky, cheap cargo uneconomical.",
+              "C) Silk was the only item allowed across borders.",
+              "D) Oasis towns lacked storage buildings."
+            ],
+            correct: 1,
+            explanation: "Overland journeys covering thousands of kilometers through deserts and mountains required goods whose profit justified the enormous transportation costs."
+          },
+          {
+            id: 16,
+            passageId: 'p2',
+            type: "Factual Information",
+            prompt: "What physical features made Bactrian camels ideal pack animals for Silk Road travel?",
+            options: [
+              "A) Padded feet and endurance in freezing, arid conditions",
+              "B) High aquatic swimming ability",
+              "C) Exceptional speed over muddy wetlands",
+              "D) Immunity to insect stings"
+            ],
+            correct: 0,
+            explanation: "Paragraph 2 notes camels possessed 'wide padded feet and exceptional cold-arid endurance'."
+          },
+          {
+            id: 17,
+            passageId: 'p2',
+            type: "Vocabulary",
+            prompt: "The word 'perilous' in paragraph 2 is closest in meaning to:",
+            options: ["A) Hazardous / dangerous", "B) Level", "C) Man-made", "D) Beautiful"],
+            correct: 0,
+            explanation: "'Perilous' means full of danger or risk."
+          },
+          {
+            id: 18,
+            passageId: 'p2',
+            type: "Factual Information",
+            prompt: "According to paragraph 3, which major religious philosophy moved along caravan corridors into China?",
+            options: ["A) Mahayana Buddhism", "B) Zoroastrianism", "C) Shintoism", "D) Nordic polytheism"],
+            correct: 0,
+            explanation: "Paragraph 3 explicitly mentions: 'Mahayana Buddhism migrated along northern caravan corridors from the Indian subcontinent into China and Korea'."
+          },
+          {
+            id: 19,
+            passageId: 'p2',
+            type: "Main Idea",
+            prompt: "What is the author's primary conclusion regarding the historical legacy of the Silk Road?",
+            options: [
+              "A) It was an early framework of transcontinental globalization that sustained Afro-Eurasian vitality.",
+              "B) It caused permanent economic exhaustion across China.",
+              "C) It was completely forgotten after maritime trade emerged.",
+              "D) It served only military conquerors."
+            ],
+            correct: 0,
+            explanation: "The conclusion states the network established 'an enduring paradigm of pre-modern globalization that stimulated economic and cultural vitality across Afro-Eurasia for over a millennium'."
+          },
+          {
+            id: 20,
+            passageId: 'p2',
+            type: "Negative Factual Information",
+            prompt: "All of the following commodities are explicitly mentioned as trade items EXCEPT:",
+            options: ["A) Lapis lazuli", "B) Raw jade", "C) Medicinal rhubarb", "D) Canned food"],
+            correct: 3,
+            explanation: "Jade, lapis lazuli, and medicinal rhubarb are explicitly named; modern 'canned food' did not exist in antiquity."
+          }
+        ]
       }
-    ];
+    };
 
-    // Estimated Scaled Scores (31 - 68) for 18 items
-    const SCALED_MAP = [
-      31, 33, 35, 38, 41, 44, 47, 50, 52, 55,
-      57, 60, 62, 64, 65, 66, 67, 68, 68
-    ];
+    // --- OFFICIAL TOEFL ITP SCALED SCORE TABLES (31 - 68) ---
+    // Scaled to fit 10 (Listening), 20 (Structure), 20 (Reading)
+    const SCALED_TABLES = {
+      listening: [ // 10 items max
+        31, 35, 40, 44, 48, 52, 56, 60, 63, 66, 68
+      ],
+      structure: [ // 20 items max
+        31, 33, 35, 38, 41, 44, 47, 50, 52, 55, 57, 59, 61, 63, 64, 65, 66, 67, 67, 68, 68
+      ],
+      reading: [ // 20 items max
+        31, 33, 35, 37, 40, 43, 46, 49, 52, 54, 57, 59, 61, 63, 64, 65, 66, 67, 67, 68, 68
+      ]
+    };
 
-    let currentIndex = 0;
-    const userAnswers = new Array(QUESTIONS.length).fill(null);
-    const flaggedItems = new Array(QUESTIONS.length).fill(false);
-    let secondsLeft = 25 * 60;
-    let examTimer = null;
-    let isLocalAudioLoaded = false;
+    // --- STATE VARIABLES ---
+    let currentSectionKey = 'listening';
+    let currentQuestionIdx = 0;
+
+    const userAnswers = {
+      listening: new Array(EXAM_DATABASE.listening.questions.length).fill(null),
+      structure: new Array(EXAM_DATABASE.structure.questions.length).fill(null),
+      reading: new Array(EXAM_DATABASE.reading.questions.length).fill(null)
+    };
+
+    const flaggedItems = {
+      listening: new Array(EXAM_DATABASE.listening.questions.length).fill(false),
+      structure: new Array(EXAM_DATABASE.structure.questions.length).fill(false),
+      reading: new Array(EXAM_DATABASE.reading.questions.length).fill(false)
+    };
+
+    let totalSecondsLeft = 50 * 60; // 50 minutes total
+    let examTimerInterval = null;
     let isMasterPlaying = false;
+    let isLocalAudioLoaded = false;
+    let currentAuditFilter = 'all';
 
     const audioElement = document.getElementById('examAudioPlayer');
     const audioProgressBar = document.getElementById('audioProgressBar');
 
+    // --- APPLICATION START ---
     window.addEventListener('DOMContentLoaded', () => {
       initPalette();
-      loadQuestion(0);
-      startTimer();
+      renderCurrentQuestion();
+      startGlobalTimer();
       setupAudioListeners();
     });
 
+    // --- SECTION SWITCHING ---
+    function switchSection(secKey) {
+      if (currentSectionKey === secKey) return;
+
+      // Pause audio if leaving listening
+      if (currentSectionKey === 'listening') {
+        if (audioElement) audioElement.pause();
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      }
+
+      currentSectionKey = secKey;
+      currentQuestionIdx = 0;
+
+      // Update Section Tabs UI
+      ['listening', 'structure', 'reading'].forEach(key => {
+        const tab = document.getElementById(`tab-${key}`);
+        if (key === secKey) {
+          tab.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition bg-indigo-600 text-white shadow-sm";
+        } else {
+          tab.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition text-slate-300 hover:bg-slate-700";
+        }
+      });
+
+      // Show/Hide Audio bar
+      const audioBar = document.getElementById('listeningAudioBar');
+      if (secKey === 'listening') {
+        audioBar.classList.remove('hidden');
+      } else {
+        audioBar.classList.add('hidden');
+      }
+
+      // Update Header Info & Directions
+      const secData = EXAM_DATABASE[secKey];
+      document.getElementById('sectionTitleDisplay').innerHTML = `<i class="fa-solid fa-circle-info"></i> ${secData.name}`;
+      document.getElementById('sectionItemCountDisplay').textContent = `${secData.questions.length} Items &bull; 50 Mins Total`;
+
+      if (secKey === 'listening') {
+        document.getElementById('sectionDirectionsText').textContent = "In Part A, you will hear short conversations between two people. After each conversation, you will hear a question. Read the four possible answers and choose the best answer. Conversations and questions are not repeated.";
+      } else if (secKey === 'structure') {
+        document.getElementById('sectionDirectionsText').textContent = "Section 2 is designed to measure your ability to recognize language appropriate for standard written English. Questions 1–12 test sentence completion, and questions 13–20 identify grammatical errors.";
+      } else {
+        document.getElementById('sectionDirectionsText').textContent = "Section 3 is designed to measure your ability to read and understand academic prose. Read each passage carefully and answer the comprehension and vocabulary questions that follow.";
+      }
+
+      initPalette();
+      renderCurrentQuestion();
+    }
+
+    // --- AUDIO CONTROLLER ENGINE ---
     function handleAudioFileSelect(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -649,9 +1132,7 @@
       audioElement.src = fileUrl;
       isLocalAudioLoaded = true;
 
-      document.getElementById('fileLabel').textContent = file.name;
-      document.getElementById('audioStatusText').textContent = "MP3 Active: " + file.name.substring(0, 16) + "...";
-      document.getElementById('audioLed').className = "w-2 h-2 rounded-full bg-emerald-400";
+      document.getElementById('fileLabel').textContent = file.name.substring(0, 18) + (file.name.length > 18 ? '...' : '');
       audioElement.load();
     }
 
@@ -661,23 +1142,23 @@
         const current = audioElement.currentTime;
         const dur = audioElement.duration;
         audioProgressBar.style.width = `${(current / dur) * 100}%`;
-        document.getElementById('currentTimeLabel').textContent = formatSeconds(current);
-        document.getElementById('durationLabel').textContent = formatSeconds(dur);
+        document.getElementById('currentTimeLabel').textContent = formatClock(current);
+        document.getElementById('durationLabel').textContent = formatClock(dur);
       });
 
       audioElement.addEventListener('play', () => {
         isMasterPlaying = true;
-        updatePlayBtnUI();
+        updateAudioButtonUI();
       });
 
       audioElement.addEventListener('pause', () => {
         isMasterPlaying = false;
-        updatePlayBtnUI();
+        updateAudioButtonUI();
       });
 
       audioElement.addEventListener('ended', () => {
         isMasterPlaying = false;
-        updatePlayBtnUI();
+        updateAudioButtonUI();
       });
     }
 
@@ -689,30 +1170,32 @@
           audioElement.pause();
         }
       } else {
+        // Speech synthesis fallback
         if ('speechSynthesis' in window) {
           if (window.speechSynthesis.speaking) {
             window.speechSynthesis.cancel();
             isMasterPlaying = false;
-            updatePlayBtnUI();
+            updateAudioButtonUI();
           } else {
-            const allText = QUESTIONS.map(q => {
+            const listData = EXAM_DATABASE.listening.questions;
+            const fullScript = listData.map(q => {
               const dlg = q.script.map(s => `${s.speaker}: ${s.text}`).join('. ');
               return `Number ${q.id}. ${dlg}`;
             }).join('. ... Next question. ... ');
 
-            const utter = new SpeechSynthesisUtterance(allText);
+            const utter = new SpeechSynthesisUtterance(fullScript);
             utter.rate = 0.95;
             utter.pitch = 1.0;
-            utter.onend = () => { isMasterPlaying = false; updatePlayBtnUI(); };
+            utter.onend = () => { isMasterPlaying = false; updateAudioButtonUI(); };
             window.speechSynthesis.speak(utter);
             isMasterPlaying = true;
-            updatePlayBtnUI();
+            updateAudioButtonUI();
           }
         }
       }
     }
 
-    function updatePlayBtnUI() {
+    function updateAudioButtonUI() {
       const icon = document.getElementById('playIcon');
       const text = document.getElementById('playText');
       const animWave = document.getElementById('playingAnimation');
@@ -720,12 +1203,12 @@
 
       if (isMasterPlaying) {
         icon.className = "fa-solid fa-pause";
-        text.textContent = "Pause Exam Audio";
+        text.textContent = "Pause Audio";
         animWave.classList.remove('hidden');
         idleIcon.classList.add('hidden');
       } else {
         icon.className = "fa-solid fa-play";
-        text.textContent = "Resume Exam Audio";
+        text.textContent = "Resume Audio";
         animWave.classList.add('hidden');
         idleIcon.classList.remove('hidden');
       }
@@ -735,19 +1218,72 @@
       audioElement.volume = parseFloat(val);
     }
 
-    function loadQuestion(index) {
-      currentIndex = index;
-      const q = QUESTIONS[index];
+    // --- QUESTION RENDERING ---
+    function renderCurrentQuestion() {
+      const secData = EXAM_DATABASE[currentSectionKey];
+      const q = secData.questions[currentQuestionIdx];
 
-      document.getElementById('partBadge').textContent = q.part;
-      document.getElementById('partTypeLabel').textContent = q.type;
-      document.getElementById('questionNumLabel').textContent = `Question ${q.id} of 18`;
+      // Stimulus panel displays
+      const stimListening = document.getElementById('stimulusListening');
+      const stimStructure = document.getElementById('stimulusStructure');
+      const stimReading = document.getElementById('stimulusReading');
 
+      stimListening.classList.add('hidden');
+      stimStructure.classList.add('hidden');
+      stimReading.classList.add('hidden');
+
+      if (currentSectionKey === 'listening') {
+        stimListening.classList.remove('hidden');
+        document.getElementById('partBadge').textContent = q.part;
+        document.getElementById('partTypeLabel').textContent = q.type;
+        document.getElementById('stimulusRightTag').textContent = "Audio Stream";
+        document.getElementById('questionPromptHeading').textContent = "Choose the one best answer to the question you heard:";
+      } else if (currentSectionKey === 'structure') {
+        stimStructure.classList.remove('hidden');
+        document.getElementById('partBadge').textContent = q.id <= 12 ? "Part A" : "Part B";
+        document.getElementById('partTypeLabel').textContent = q.type;
+        document.getElementById('stimulusRightTag').textContent = "Grammar & Syntax";
+
+        if (q.id <= 12) {
+          document.getElementById('structureDirectionsSubtitle').textContent = "Questions 1–12: Incomplete sentences. Choose the one word or phrase that best completes the sentence.";
+          document.getElementById('questionPromptHeading').textContent = "Select the best option to complete the sentence:";
+          document.getElementById('structurePromptBox').innerHTML = `<p class="italic text-slate-900">${q.prompt}</p>`;
+        } else {
+          document.getElementById('structureDirectionsSubtitle').textContent = "Questions 13–20: Error identification. Identify the one underlined word or phrase that must be changed.";
+          document.getElementById('questionPromptHeading').textContent = "Identify the one word or phrase [A, B, C, or D] that is incorrect:";
+
+          // Highlight underlined segments
+          let formattedPrompt = q.prompt
+            .replace(/\[A: (.*?)\]/g, '<span class="font-bold underline decoration-indigo-600 decoration-2 text-indigo-950">[A] $1</span>')
+            .replace(/\[B: (.*?)\]/g, '<span class="font-bold underline decoration-indigo-600 decoration-2 text-indigo-950">[B] $1</span>')
+            .replace(/\[C: (.*?)\]/g, '<span class="font-bold underline decoration-indigo-600 decoration-2 text-indigo-950">[C] $1</span>')
+            .replace(/\[D: (.*?)\]/g, '<span class="font-bold underline decoration-indigo-600 decoration-2 text-indigo-950">[D] $1</span>');
+          document.getElementById('structurePromptBox').innerHTML = `<p class="leading-relaxed text-slate-900">${formattedPrompt}</p>`;
+        }
+      } else if (currentSectionKey === 'reading') {
+        stimReading.classList.remove('hidden');
+        const passage = secData.passages.find(p => p.id === q.passageId) || secData.passages[0];
+
+        document.getElementById('partBadge').textContent = q.passageId === 'p1' ? "Passage 1" : "Passage 2";
+        document.getElementById('partTypeLabel').textContent = q.type;
+        document.getElementById('stimulusRightTag').textContent = "Academic Text";
+        document.getElementById('readingPassageTitle').textContent = passage.title;
+
+        const passageBox = document.getElementById('readingPassageText');
+        passageBox.innerHTML = passage.paragraphs.map(p => `<p class="indent-6">${p}</p>`).join('');
+
+        document.getElementById('questionPromptHeading').textContent = q.prompt;
+      }
+
+      // Question Counter Label
+      document.getElementById('questionNumLabel').textContent = `Question ${q.id} of ${secData.questions.length}`;
+
+      // Four Options Render
       const optContainer = document.getElementById('optionsContainer');
       optContainer.innerHTML = '';
 
       q.options.forEach((optText, optIdx) => {
-        const isSelected = userAnswers[index] === optIdx;
+        const isSelected = userAnswers[currentSectionKey][currentQuestionIdx] === optIdx;
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.onclick = () => selectOption(optIdx);
@@ -768,74 +1304,102 @@
         optContainer.appendChild(btn);
       });
 
+      // Flag status
       const flagBtn = document.getElementById('flagBtn');
       const flagText = document.getElementById('flagBtnText');
-      if (flaggedItems[index]) {
+      if (flaggedItems[currentSectionKey][currentQuestionIdx]) {
         flagBtn.className = 'text-xs font-semibold px-2.5 py-1 rounded-md border border-amber-300 bg-amber-50 text-amber-700 flex items-center gap-1.5 transition';
         flagText.textContent = 'Flagged';
       } else {
         flagBtn.className = 'text-xs font-semibold px-2.5 py-1 rounded-md border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300 flex items-center gap-1.5 transition';
-        flagText.textContent = 'Flag Question';
+        flagText.textContent = 'Flag';
       }
 
-      document.getElementById('prevBtn').disabled = (index === 0);
-      document.getElementById('prevBtn').classList.toggle('opacity-40', index === 0);
-      document.getElementById('nextBtn').innerHTML = (index === QUESTIONS.length - 1)
-        ? `<span>Finish Exam</span> <i class="fa-solid fa-check ml-1"></i>`
+      // Prev / Next button states
+      document.getElementById('prevBtn').disabled = (currentQuestionIdx === 0);
+      document.getElementById('prevBtn').classList.toggle('opacity-40', currentQuestionIdx === 0);
+
+      const isLast = currentQuestionIdx === secData.questions.length - 1;
+      document.getElementById('nextBtn').innerHTML = isLast
+        ? `<span>Next Section</span> <i class="fa-solid fa-arrow-right ml-1"></i>`
         : `<span>Next Question</span> <i class="fa-solid fa-chevron-right ml-1"></i>`;
 
       updatePaletteUI();
     }
 
     function selectOption(optIdx) {
-      userAnswers[currentIndex] = optIdx;
-      loadQuestion(currentIndex);
+      userAnswers[currentSectionKey][currentQuestionIdx] = optIdx;
+      renderCurrentQuestion();
+      updateAnswerBadges();
+    }
+
+    function clearCurrentSelection() {
+      userAnswers[currentSectionKey][currentQuestionIdx] = null;
+      renderCurrentQuestion();
+      updateAnswerBadges();
     }
 
     function toggleFlagCurrentQuestion() {
-      flaggedItems[currentIndex] = !flaggedItems[currentIndex];
-      loadQuestion(currentIndex);
+      flaggedItems[currentSectionKey][currentQuestionIdx] = !flaggedItems[currentSectionKey][currentQuestionIdx];
+      renderCurrentQuestion();
     }
 
     function goToPrevQuestion() {
-      if (currentIndex > 0) loadQuestion(currentIndex - 1);
-    }
-
-    function goToNextQuestion() {
-      if (currentIndex < QUESTIONS.length - 1) {
-        loadQuestion(currentIndex + 1);
-      } else {
-        finishExam();
+      if (currentQuestionIdx > 0) {
+        currentQuestionIdx--;
+        renderCurrentQuestion();
       }
     }
 
+    function goToNextQuestion() {
+      const secData = EXAM_DATABASE[currentSectionKey];
+      if (currentQuestionIdx < secData.questions.length - 1) {
+        currentQuestionIdx++;
+        renderCurrentQuestion();
+      } else {
+        if (currentSectionKey === 'listening') switchSection('structure');
+        else if (currentSectionKey === 'structure') switchSection('reading');
+        else openSubmitModal();
+      }
+    }
+
+    // --- PALETTE GENERATOR ---
     function initPalette() {
+      const secData = EXAM_DATABASE[currentSectionKey];
       const grid = document.getElementById('paletteGrid');
       grid.innerHTML = '';
-      QUESTIONS.forEach((_, idx) => {
+
+      document.getElementById('paletteSectionLabel').textContent = `${secData.name.split(':')[1] || secData.name} (1–${secData.questions.length})`;
+
+      secData.questions.forEach((_, idx) => {
         const btn = document.createElement('button');
         btn.id = `palette-${idx}`;
         btn.textContent = idx + 1;
-        btn.onclick = () => loadQuestion(idx);
+        btn.onclick = () => {
+          currentQuestionIdx = idx;
+          renderCurrentQuestion();
+        };
         grid.appendChild(btn);
       });
       updatePaletteUI();
     }
 
     function updatePaletteUI() {
-      QUESTIONS.forEach((_, idx) => {
+      const secData = EXAM_DATABASE[currentSectionKey];
+
+      secData.questions.forEach((_, idx) => {
         const btn = document.getElementById(`palette-${idx}`);
         if (!btn) return;
 
-        btn.className = 'h-9 rounded-lg text-xs font-bold relative transition flex items-center justify-center border ';
+        btn.className = 'h-8 sm:h-9 rounded-lg text-xs font-bold relative transition flex items-center justify-center border ';
 
-        if (idx === currentIndex) {
+        if (idx === currentQuestionIdx) {
           btn.className += 'ring-2 ring-indigo-600 border-indigo-600 ';
         } else {
           btn.className += 'border-slate-200 ';
         }
 
-        if (userAnswers[idx] !== null) {
+        if (userAnswers[currentSectionKey][idx] !== null) {
           btn.className += 'bg-indigo-600 text-white ';
         } else {
           btn.className += 'bg-slate-100 text-slate-700 hover:bg-slate-200 ';
@@ -844,133 +1408,224 @@
         const dot = btn.querySelector('.flag-dot');
         if (dot) dot.remove();
 
-        if (flaggedItems[idx]) {
+        if (flaggedItems[currentSectionKey][idx]) {
           const flagEl = document.createElement('span');
           flagEl.className = 'flag-dot absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border border-white';
           btn.appendChild(flagEl);
         }
       });
 
-      const answered = userAnswers.filter(a => a !== null).length;
-      document.getElementById('answeredCounter').textContent = `${answered} / ${QUESTIONS.length} Answered`;
+      const answeredInSec = userAnswers[currentSectionKey].filter(a => a !== null).length;
+      document.getElementById('answeredCounter').textContent = `${answeredInSec} / ${secData.questions.length} Answered`;
     }
 
-    function startTimer() {
-      const display = document.getElementById('timerText');
-      examTimer = setInterval(() => {
-        if (secondsLeft <= 0) {
-          clearInterval(examTimer);
-          finishExam();
+    function updateAnswerBadges() {
+      ['listening', 'structure', 'reading'].forEach(sec => {
+        const answered = userAnswers[sec].filter(a => a !== null).length;
+        const total = EXAM_DATABASE[sec].questions.length;
+        document.getElementById(`badge-${sec}`).textContent = `${answered}/${total}`;
+      });
+
+      const totalAns = ['listening', 'structure', 'reading'].reduce((acc, sec) => acc + userAnswers[sec].filter(a => a !== null).length, 0);
+      document.getElementById('totalAnsweredCounter').textContent = `${totalAns} / 50`;
+    }
+
+    // --- TIMER ENGINE ---
+    function startGlobalTimer() {
+      if (examTimerInterval) clearInterval(examTimerInterval);
+      examTimerInterval = setInterval(() => {
+        if (totalSecondsLeft <= 0) {
+          clearInterval(examTimerInterval);
+          confirmFinalSubmit();
           return;
         }
-        secondsLeft--;
-        display.textContent = formatSeconds(secondsLeft);
+        totalSecondsLeft--;
+        const display = document.getElementById('timerText');
+        display.textContent = formatClock(totalSecondsLeft);
 
-        if (secondsLeft <= 300) {
+        if (totalSecondsLeft <= 300) {
           document.getElementById('timerBox').classList.add('text-rose-400', 'border-rose-600', 'animate-pulse');
         }
       }, 1000);
     }
 
-    function formatSeconds(sec) {
-      if (isNaN(sec)) return "00:00";
+    function formatClock(sec) {
+      if (isNaN(sec) || sec < 0) return "00:00";
       const m = Math.floor(sec / 60);
       const s = Math.floor(sec % 60);
       return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     }
 
-    function finishExam() {
-      clearInterval(examTimer);
+    // --- MODAL ENGINE ---
+    function openSubmitModal() {
+      document.getElementById('modalListSummary').textContent = `${userAnswers.listening.filter(a => a !== null).length} / 10`;
+      document.getElementById('modalStructSummary').textContent = `${userAnswers.structure.filter(a => a !== null).length} / 20`;
+      document.getElementById('modalReadSummary').textContent = `${userAnswers.reading.filter(a => a !== null).length} / 20`;
+      document.getElementById('submitModal').classList.remove('hidden');
+    }
+
+    function closeSubmitModal() {
+      document.getElementById('submitModal').classList.add('hidden');
+    }
+
+    // --- FINAL SUBMISSION & SCORING ---
+    function confirmFinalSubmit() {
+      closeSubmitModal();
+      clearInterval(examTimerInterval);
       if (audioElement) audioElement.pause();
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
-      let rawScore = 0;
-      QUESTIONS.forEach((q, idx) => {
-        if (userAnswers[idx] === q.correct) rawScore++;
+      // Compute Raw Scores
+      const rawScores = {
+        listening: 0,
+        structure: 0,
+        reading: 0
+      };
+
+      ['listening', 'structure', 'reading'].forEach(sec => {
+        EXAM_DATABASE[sec].questions.forEach((q, idx) => {
+          if (userAnswers[sec][idx] === q.correct) {
+            rawScores[sec]++;
+          }
+        });
       });
 
-      const scaled = SCALED_MAP[rawScore] || 31;
-      let cefr = "B1 (Independent)";
-      if (scaled >= 64) cefr = "C1 (Advanced Operational)";
-      else if (scaled >= 54) cefr = "B2 (Vantage)";
+      // Scaled Scores (31 - 68)
+      const scaled1 = SCALED_TABLES.listening[rawScores.listening] || 31;
+      const scaled2 = SCALED_TABLES.structure[rawScores.structure] || 31;
+      const scaled3 = SCALED_TABLES.reading[rawScores.reading] || 31;
 
+      // Official TOEFL ITP Formula: ((Scaled1 + Scaled2 + Scaled3) * 10) / 3
+      const totalScaled = Math.round(((scaled1 + scaled2 + scaled3) * 10) / 3);
+
+      let cefr = "A2 / B1 (Intermediate)";
+      if (totalScaled >= 627) cefr = "C1 (Proficient Operational)";
+      else if (totalScaled >= 543) cefr = "B2 (Vantage / Independent)";
+      else if (totalScaled >= 460) cefr = "B1 (Threshold)";
+
+      // Switch view to Score Report
       document.getElementById('testWorkspace').classList.add('hidden');
+      document.getElementById('listeningAudioBar').classList.add('hidden');
       document.getElementById('resultsSection').classList.remove('hidden');
 
-      document.getElementById('resRawScore').textContent = rawScore;
-      document.getElementById('resScaledScore').textContent = scaled;
+      // Populate Report Cards
+      document.getElementById('resTotalScaled').textContent = totalScaled;
       document.getElementById('resCefr').textContent = cefr;
 
-      const list = document.getElementById('resultsList');
-      list.innerHTML = '';
+      document.getElementById('scoreSec1Scaled').textContent = scaled1;
+      document.getElementById('scoreSec1Raw').textContent = `Raw Correct: ${rawScores.listening} of 10 (${Math.round((rawScores.listening / 10) * 100)}%)`;
+      document.getElementById('progSec1').style.width = `${(rawScores.listening / 10) * 100}%`;
 
-      QUESTIONS.forEach((q, idx) => {
-        const userChoice = userAnswers[idx];
-        const isCorrect = userChoice === q.correct;
+      document.getElementById('scoreSec2Scaled').textContent = scaled2;
+      document.getElementById('scoreSec2Raw').textContent = `Raw Correct: ${rawScores.structure} of 20 (${Math.round((rawScores.structure / 20) * 100)}%)`;
+      document.getElementById('progSec2').style.width = `${(rawScores.structure / 20) * 100}%`;
 
-        const card = document.createElement('div');
-        card.className = `p-5 rounded-2xl border ${
-          isCorrect ? 'bg-emerald-50/40 border-emerald-200' : 'bg-rose-50/40 border-rose-200'
-        }`;
+      document.getElementById('scoreSec3Scaled').textContent = scaled3;
+      document.getElementById('scoreSec3Raw').textContent = `Raw Correct: ${rawScores.reading} of 20 (${Math.round((rawScores.reading / 20) * 100)}%)`;
+      document.getElementById('progSec3').style.width = `${(rawScores.reading / 20) * 100}%`;
 
-        let scriptHtml = q.script.map(s => `<div><span class="font-bold text-slate-700">${s.speaker}:</span> <span>"${s.text}"</span></div>`).join('');
-
-        card.innerHTML = `
-          <div class="flex items-center justify-between gap-3 mb-3">
-            <span class="text-xs font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-800">
-              Question #${q.id} &bull; ${q.part}
-            </span>
-            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${
-              isCorrect ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-            }">
-              ${isCorrect ? '<i class="fa-solid fa-check mr-1"></i> Correct' : userChoice !== null ? '<i class="fa-solid fa-xmark mr-1"></i> Incorrect' : 'Unanswered'}
-            </span>
-          </div>
-
-          <div class="text-xs bg-white p-3.5 rounded-xl border border-slate-200 text-slate-600 space-y-1 mb-3">
-            ${scriptHtml}
-          </div>
-
-          <p class="text-sm font-bold text-slate-900 mb-2">Spoken Question: ${q.spokenQuestion}</p>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mb-3">
-            ${q.options.map((opt, oIdx) => {
-              const isKey = oIdx === q.correct;
-              const isSelected = oIdx === userChoice;
-              let style = 'bg-white border-slate-200 text-slate-600';
-              if (isKey) style = 'bg-emerald-100 border-emerald-400 text-emerald-950 font-bold';
-              else if (isSelected && !isKey) style = 'bg-rose-100 border-rose-400 text-rose-950 font-bold';
-
-              return `
-                <div class="p-2.5 rounded-lg border ${style}">
-                  ${opt}
-                  ${isKey ? ' <span class="text-emerald-700 font-bold ml-1">(Correct Answer)</span>' : ''}
-                  ${isSelected && !isKey ? ' <span class="text-rose-700 font-bold ml-1">(Your Answer)</span>' : ''}
-                </div>
-              `;
-            }).join('')}
-          </div>
-
-          <div class="text-xs bg-indigo-50 border-l-2 border-indigo-600 p-2.5 rounded-r text-indigo-950">
-            <strong>Explanation:</strong> ${q.explanation}
-          </div>
-        `;
-        list.appendChild(card);
-      });
-
+      renderAuditList();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function restartExam() {
-      userAnswers.fill(null);
-      flaggedItems.fill(false);
-      secondsLeft = 25 * 60;
+    function renderAuditList() {
+      const container = document.getElementById('resultsList');
+      container.innerHTML = '';
 
+      ['listening', 'structure', 'reading'].forEach(secKey => {
+        const sec = EXAM_DATABASE[secKey];
+
+        const sectionHeading = document.createElement('h4');
+        sectionHeading.className = "text-sm font-bold uppercase tracking-wider text-indigo-700 pb-2 border-b border-slate-200 mt-6 flex justify-between";
+        sectionHeading.innerHTML = `<span>${sec.name}</span> <span class="font-normal text-xs text-slate-500">${sec.questions.length} Questions</span>`;
+        container.appendChild(sectionHeading);
+
+        sec.questions.forEach((q, idx) => {
+          const userChoice = userAnswers[secKey][idx];
+          const isCorrect = userChoice === q.correct;
+
+          if (currentAuditFilter === 'incorrect' && isCorrect) return;
+
+          const card = document.createElement('div');
+          card.className = `p-5 rounded-2xl border ${
+            isCorrect ? 'bg-emerald-50/40 border-emerald-200' : 'bg-rose-50/40 border-rose-200'
+          }`;
+
+          let contextSnippet = '';
+          if (q.script) {
+            contextSnippet = `<div class="text-xs bg-white p-3 rounded-xl border border-slate-200 text-slate-600 mb-2 space-y-1">` +
+              q.script.map(s => `<div><span class="font-bold text-slate-700">${s.speaker}:</span> "${s.text}"</div>`).join('') +
+              `</div>`;
+          } else if (q.prompt && secKey === 'structure') {
+            contextSnippet = `<div class="text-sm font-serif p-3 bg-white border border-slate-200 rounded-xl mb-2 text-slate-900">${q.prompt}</div>`;
+          }
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between gap-3 mb-2">
+              <span class="text-xs font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-800">
+                Question #${q.id} &bull; ${q.type || q.part}
+              </span>
+              <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                isCorrect ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+              }">
+                ${isCorrect ? '<i class="fa-solid fa-check mr-1"></i> Correct' : userChoice !== null ? '<i class="fa-solid fa-xmark mr-1"></i> Incorrect' : 'Unanswered'}
+              </span>
+            </div>
+
+            ${contextSnippet}
+            ${q.spokenQuestion ? `<p class="text-xs font-bold text-slate-800 mb-2">Spoken Question: ${q.spokenQuestion}</p>` : ''}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mb-3">
+              ${q.options.map((opt, oIdx) => {
+                const isKey = oIdx === q.correct;
+                const isSelected = oIdx === userChoice;
+                let style = 'bg-white border-slate-200 text-slate-600';
+                if (isKey) style = 'bg-emerald-100 border-emerald-400 text-emerald-950 font-bold';
+                else if (isSelected && !isKey) style = 'bg-rose-100 border-rose-400 text-rose-950 font-bold';
+
+                return `
+                  <div class="p-2.5 rounded-lg border ${style}">
+                    ${opt}
+                    ${isKey ? ' <span class="text-emerald-700 font-bold ml-1">(Correct Answer)</span>' : ''}
+                    ${isSelected && !isKey ? ' <span class="text-rose-700 font-bold ml-1">(Your Answer)</span>' : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <div class="text-xs bg-indigo-50 border-l-2 border-indigo-600 p-2.5 rounded-r text-indigo-950">
+              <strong>Explanation:</strong> ${q.explanation}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      });
+    }
+
+    function filterAudit(mode) {
+      currentAuditFilter = mode;
+      document.getElementById('btnFilterAll').className = mode === 'all'
+        ? "px-3 py-1 rounded-md text-xs font-bold bg-indigo-600 text-white"
+        : "px-3 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200";
+      document.getElementById('btnFilterInc').className = mode === 'incorrect'
+        ? "px-3 py-1 rounded-md text-xs font-bold bg-indigo-600 text-white"
+        : "px-3 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200";
+      renderAuditList();
+    }
+
+    function restartFullExam() {
+      ['listening', 'structure', 'reading'].forEach(sec => {
+        userAnswers[sec].fill(null);
+        flaggedItems[sec].fill(false);
+      });
+
+      totalSecondsLeft = 50 * 60;
       document.getElementById('resultsSection').classList.add('hidden');
       document.getElementById('testWorkspace').classList.remove('hidden');
 
-      loadQuestion(0);
-      startTimer();
+      switchSection('listening');
+      startGlobalTimer();
+      updateAnswerBadges();
     }
   </script>
 </body>
