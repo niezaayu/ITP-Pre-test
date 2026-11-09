@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TOEFL ITP® Listening Mock Test - Official Audio Edition</title>
+  <title>TOEFL ITP® Listening Mock Test - Edition 2 (Official Audio)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,10 +28,10 @@
           <h1 class="text-sm sm:text-base font-bold flex items-center gap-2">
             Section 1: Listening Comprehension
             <span class="text-xs bg-indigo-950 text-indigo-300 border border-indigo-700/60 px-2 py-0.5 rounded-full font-medium">
-              Single-Listen Standard
+              Single-Listen Examination
             </span>
           </h1>
-          <p class="text-xs text-slate-400">25 Questions &bull; Continuous Exam Audio</p>
+          <p class="text-xs text-slate-400">18 Questions &bull; Continuous Exam Audio</p>
         </div>
       </div>
 
@@ -46,7 +46,7 @@
         <!-- Section Timer -->
         <div id="timerBox" class="flex items-center gap-1.5 bg-slate-800 border border-slate-700 px-3 py-1 rounded-lg text-sm font-mono-code font-bold text-amber-300">
           <i class="fa-regular fa-clock text-slate-400"></i>
-          <span id="timerText">35:00</span>
+          <span id="timerText">25:00</span>
         </div>
 
         <button onclick="finishExam()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-lg transition shadow-sm">
@@ -56,27 +56,25 @@
     </div>
   </header>
 
-  <!-- MASTER AUDIO CONTROLLER BAR (NO PER-QUESTION REPLAY, NO SCRUBBING) -->
+  <!-- MASTER AUDIO CONTROLLER (NO PER-QUESTION REPLAY, SINGLE LISTEN ENFORCED) -->
   <section class="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 shadow-sm sticky top-[57px] z-40">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
       
-      <!-- File Loader and Continuous Master Player -->
+      <!-- Audio File Loader & Master Play -->
       <div class="w-full md:w-auto flex flex-wrap items-center gap-3">
-        <!-- File Picker for "Audio listening quiz.mp3" -->
         <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 border border-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 flex items-center gap-2 transition">
           <i class="fa-solid fa-folder-open text-indigo-600"></i>
-          <span id="fileLabel">Load "Audio listening quiz.mp3"</span>
+          <span id="fileLabel">Load New Audio Track</span>
           <input type="file" id="audioFileInput" accept="audio/*" class="hidden" onchange="handleAudioFileSelect(event)">
         </label>
 
-        <!-- Master Play Button -->
         <button id="masterPlayBtn" onclick="toggleMasterAudio()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition shadow-sm">
           <i id="playIcon" class="fa-solid fa-play"></i>
           <span id="playText">Start Exam Audio</span>
         </button>
       </div>
 
-      <!-- Scrubber (Disabled / Read-Only to Enforce Single Listen) & Volume -->
+      <!-- Scrubber (Disabled to prevent rewinding) & Volume -->
       <div class="w-full md:w-5/12 flex items-center gap-3">
         <span id="currentTimeLabel" class="text-xs font-mono-code text-slate-500">00:00</span>
         <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
@@ -84,7 +82,6 @@
         </div>
         <span id="durationLabel" class="text-xs font-mono-code text-slate-500">--:--</span>
 
-        <!-- Volume Slider -->
         <div class="hidden lg:flex items-center gap-1.5 text-slate-500 ml-1">
           <i class="fa-solid fa-volume-low text-xs"></i>
           <input type="range" id="volumeControl" min="0" max="1" step="0.05" value="1" 
@@ -94,11 +91,11 @@
       </div>
     </div>
 
-    <!-- STRICT PLAY-ONCE EXAM NOTICE -->
+    <!-- EXAM POLICY NOTICE -->
     <div class="max-w-7xl mx-auto mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-amber-700 font-medium">
       <div class="flex items-center gap-1.5">
         <i class="fa-solid fa-shield-halved text-amber-600"></i>
-        <span><strong>Official Exam Policy:</strong> Audio plays through once in real time. Individual question replay is disabled to match ETS testing regulations.</span>
+        <span><strong>Official Test Rule:</strong> Master audio plays continuously forward. Individual question replay is disabled.</span>
       </div>
       <span class="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-0.5 rounded font-bold">
         Single Listen Enforced
@@ -118,10 +115,10 @@
         <span class="font-bold text-indigo-700 uppercase tracking-wider text-xs flex items-center gap-1.5">
           <i class="fa-solid fa-circle-info"></i> Section Directions
         </span>
-        <span class="text-xs text-slate-400 font-mono-code">25 Items &bull; 35 Minutes</span>
+        <span class="text-xs text-slate-400 font-mono-code">18 Items &bull; 25 Minutes</span>
       </div>
       <p class="leading-relaxed">
-        Listen to the conversations and talks on the master audio track. After each conversation, you will hear a question. Read the four possible answers and choose the best one. <strong>Conversations and questions are not repeated.</strong>
+        Listen to the conversations and lectures on the master audio track. After each conversation, you will hear a question. Read the four possible answers and select the best response. <strong>Conversations and questions are not repeated.</strong>
       </p>
     </div>
 
@@ -131,7 +128,6 @@
       <!-- LEFT: AUDIO STATUS / LIVE SOUND MONITOR (5 Cols) -->
       <section class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between min-h-[420px]">
         <div>
-          <!-- Part Header -->
           <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
             <div class="flex items-center gap-2">
               <span id="partBadge" class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold px-2.5 py-1 rounded-md">
@@ -140,7 +136,7 @@
               <span id="partTypeLabel" class="text-xs text-slate-500 font-medium">Short Dialogue</span>
             </div>
             <span class="text-xs font-mono-code text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
-              Standard Audio Stream
+              Master Track Stream
             </span>
           </div>
 
@@ -161,26 +157,26 @@
             <div class="space-y-1">
               <h3 id="stimulusHeadline" class="text-base font-bold text-white">Listening Section In Progress</h3>
               <p id="stimulusSubtext" class="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
-                Audio is played through once from the master bar. Answer the questions as the exam progresses.
+                The master audio plays once continuously. Answer questions in your test booklet as you listen.
               </p>
             </div>
           </div>
         </div>
 
         <div class="pt-4 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between">
-          <span>Official TOEFL ITP Format</span>
-          <span>No Individual Replay Allowed</span>
+          <span>Standard TOEFL ITP Format</span>
+          <span>Individual Replay Prohibited</span>
         </div>
       </section>
 
       <!-- RIGHT: PURE QUESTION CARD & PALETTE (7 Cols) -->
       <section class="lg:col-span-7 flex flex-col gap-5">
 
-        <!-- QUESTION CARD: ONLY NUMBER, INSTRUCTION, 4 OPTIONS & NAVIGATION -->
+        <!-- QUESTION CARD -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col">
           <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
             <span id="questionNumLabel" class="text-xs font-bold uppercase tracking-wider text-indigo-600">
-              Question 1 of 25
+              Question 1 of 18
             </span>
 
             <button id="flagBtn" onclick="toggleFlagCurrentQuestion()" class="text-xs font-semibold px-2.5 py-1 rounded-md border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-300 flex items-center gap-1.5 transition">
@@ -189,17 +185,16 @@
             </button>
           </div>
 
-          <!-- DIRECTIONS PROMPT -->
           <h2 class="text-sm font-semibold text-slate-700 mb-4">
             Choose the one best answer to the question you heard:
           </h2>
 
-          <!-- FOUR MULTIPLE CHOICE OPTIONS (A, B, C, D) -->
+          <!-- FOUR CHOICES (A, B, C, D) -->
           <div id="optionsContainer" class="space-y-2.5">
             <!-- Dynamically injected -->
           </div>
 
-          <!-- BOTTOM CONTROLS: PREVIOUS, NEXT, FINISH (NO AUDIO CONTROLS) -->
+          <!-- NAVIGATION (NO PER-QUESTION REPLAY CONTROLS) -->
           <div class="flex items-center justify-between mt-6 pt-4 border-t border-slate-100">
             <button id="prevBtn" onclick="goToPrevQuestion()" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
               <i class="fa-solid fa-chevron-left mr-1"></i> Previous
@@ -210,15 +205,15 @@
           </div>
         </div>
 
-        <!-- 25-ITEM PALETTE -->
+        <!-- 18-ITEM PALETTE -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
           <div class="flex items-center justify-between mb-3 text-xs">
             <span class="font-bold uppercase tracking-wider text-slate-500">Question Palette</span>
-            <span id="answeredCounter" class="text-slate-500 font-medium">0 / 25 Answered</span>
+            <span id="answeredCounter" class="text-slate-500 font-medium">0 / 18 Answered</span>
           </div>
 
-          <div id="paletteGrid" class="grid grid-cols-5 gap-2">
-            <!-- Dynamically generated -->
+          <div id="paletteGrid" class="grid grid-cols-6 sm:grid-cols-6 gap-2">
+            <!-- Dynamically generated 1-18 -->
           </div>
 
           <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
@@ -233,7 +228,7 @@
     </div>
   </main>
 
-  <!-- POST-TEST DIAGNOSTIC RESULTS REPORT (Hidden Initially) -->
+  <!-- POST-TEST REPORT -->
   <section id="resultsSection" class="hidden max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 space-y-6 flex-1">
     
     <!-- CERTIFICATE HEADER -->
@@ -246,7 +241,7 @@
           Listening Score: <span id="resScaledScore" class="text-amber-400">--</span> / 68
         </h2>
         <p class="text-sm text-slate-300 mt-1">
-          Raw Score: <span id="resRawScore" class="font-bold text-white">--</span> of 25 items correct &bull; CEFR Level: <span id="resCefr" class="font-bold text-emerald-400">--</span>
+          Raw Score: <span id="resRawScore" class="font-bold text-white">--</span> of 18 items correct &bull; CEFR Level: <span id="resCefr" class="font-bold text-emerald-400">--</span>
         </p>
       </div>
 
@@ -260,11 +255,11 @@
       </div>
     </div>
 
-    <!-- DETAILED AUDIT WITH SPOKEN TRANSCRIPTS -->
+    <!-- TRANSCRIPT & EXPLANATION AUDIT -->
     <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
       <div class="border-b border-slate-100 pb-4 mb-6">
         <h3 class="text-lg font-bold text-slate-900">Transcript & Explanation Breakdown</h3>
-        <p class="text-xs text-slate-500">Review the spoken dialogue transcripts, correct answer keys, and pedagogical explanations.</p>
+        <p class="text-xs text-slate-500">Review spoken dialogue transcripts, verified answer keys, and pedagogical rationales.</p>
       </div>
 
       <div id="resultsList" class="space-y-6">
@@ -275,496 +270,363 @@
 
   <!-- FOOTER -->
   <footer class="mt-auto border-t border-slate-200 bg-white py-3 px-4 text-center text-xs text-slate-500">
-    TOEFL ITP® Listening Mock Test &bull; Single-Play Master Audio Edition
+    TOEFL ITP® Listening Mock Exam &bull; Edition 2 (Single-Play Audio Standard)
   </footer>
 
-  <!-- DATA & LOGIC -->
+  <!-- DATA & SCRIPT LOGIC -->
   <script>
     const QUESTIONS = [
+      // PART A: Short Dialogues (Q1 - Q10)
       {
         id: 1,
         part: "Part A",
         type: "Short Dialogue",
         script: [
-          { speaker: "Man", text: "I think we should submit the essay now, we won't have another time since we have public policy and comparative politics today." },
-          { speaker: "Woman", text: "Yeah, we've got a lot on our plate today." },
-          { speaker: "Narrator", text: "What does the woman imply?" }
+          { speaker: "Woman", text: "Why did you get that kind of fruit?" },
+          { speaker: "Man", text: "I wouldn't have bought these cherries had I known that grapes were so cheap." },
+          { speaker: "Narrator", text: "What does the man mean?" }
         ],
-        spokenQuestion: "What does the woman imply?",
+        spokenQuestion: "What does the man mean?",
         options: [
-          "A) They should eat lunch before submitting the essay.",
-          "B) They are extremely busy with multiple classes and assignments today.",
-          "C) Their public policy class was canceled.",
-          "D) They have plenty of time left later this evening."
+          "A) He bought grapes because they were cheap.",
+          "B) He wishes he had known how inexpensive the grapes were.",
+          "C) He prefers cherries to grapes.",
+          "D) He bought both cherries and grapes."
         ],
         correct: 1,
-        explanation: "The idiom 'have a lot on our plate' means having a very large amount of work or commitments to handle."
+        explanation: "The conditional inversion 'had I known that grapes were so cheap' implies he did not know grapes were cheap, and regrets buying the expensive cherries."
       },
       {
         id: 2,
         part: "Part A",
         type: "Short Dialogue",
         script: [
-          { speaker: "Woman", text: "You really can't throw well. I don't think you can be on the team unless you improve." },
-          { speaker: "Man", text: "I'm afraid I'm very bad at playing sports." },
-          { speaker: "Narrator", text: "What does the man imply?" }
+          { speaker: "Man", text: "Were you upset by what Richard said to you?" },
+          { speaker: "Woman", text: "I couldn't have been more infuriated." },
+          { speaker: "Narrator", text: "What does the woman mean?" }
         ],
-        spokenQuestion: "What does the man imply?",
+        spokenQuestion: "What does the woman mean?",
         options: [
-          "A) He expects to practice and make the team.",
-          "B) He agrees that he has poor athletic ability.",
-          "C) He thinks the woman is an unfair coach.",
-          "D) He prefers soccer over baseball."
+          "A) She was slightly annoyed.",
+          "B) She was extremely angry with Richard.",
+          "C) Richard was furious with her.",
+          "D) She did not hear what Richard said."
         ],
         correct: 1,
-        explanation: "The man admits 'I'm afraid I'm very bad at playing sports', acknowledging his lack of athletic skill."
+        explanation: "'I couldn't have been more infuriated' is a superlative expression meaning she was at the maximum peak of anger."
       },
       {
         id: 3,
         part: "Part A",
         type: "Short Dialogue",
         script: [
-          { speaker: "Man", text: "Did you see the manager about the job in the bookstore?" },
-          { speaker: "Woman", text: "Yes, and I also had to fill out an application for further interviews." },
-          { speaker: "Narrator", text: "What does the woman mean?" }
+          { speaker: "Man", text: "How is your boss feeling about his retirement?" },
+          { speaker: "Woman", text: "Oh, he isn't too unhappy to be retiring." },
+          { speaker: "Narrator", text: "What does the woman imply about her boss?" }
         ],
-        spokenQuestion: "What does the woman mean?",
+        spokenQuestion: "What does the woman imply about her boss?",
         options: [
-          "A) She was hired immediately without an interview.",
-          "B) The bookstore is no longer accepting workers.",
-          "C) She completed an application form for the next hiring round.",
-          "D) She decided not to apply for the bookstore position."
+          "A) Her boss is eager and happy to retire.",
+          "B) Her boss is depressed about leaving his job.",
+          "C) Her boss does not want to retire yet.",
+          "D) Her boss is completely indifferent."
         ],
-        correct: 2,
-        explanation: "She met the manager and filled out the application required for subsequent interviews."
+        correct: 0,
+        explanation: "The double-negative litotes 'isn't too unhappy to be retiring' means he is actually quite pleased and looking forward to retirement."
       },
       {
         id: 4,
         part: "Part A",
         type: "Short Dialogue",
         script: [
-          { speaker: "Woman", text: "Were you able to get into that calculus class?" },
-          { speaker: "Man", text: "Yeah, much to my regret." },
-          { speaker: "Narrator", text: "What does the man mean?" }
+          { speaker: "Man", text: "Why were you thanking Tom?" },
+          { speaker: "Woman", text: "He lent me enough money to pay the rent." },
+          { speaker: "Narrator", text: "What does the woman mean?" }
         ],
-        spokenQuestion: "What does the man mean?",
+        spokenQuestion: "What does the woman mean?",
         options: [
-          "A) He was unable to enroll in calculus.",
-          "B) He enrolled in the class but now regrets doing so.",
-          "C) He is excited about studying calculus.",
-          "D) The class schedule was changed."
+          "A) Tom paid her rent for free.",
+          "B) Tom loaned her the funds needed for rent.",
+          "C) She gave Tom money for his rent.",
+          "D) She couldn't pay her rent this month."
         ],
         correct: 1,
-        explanation: "The phrase 'much to my regret' shows he got into the class, but is unhappy with that outcome."
+        explanation: "The woman states that Tom lent her the necessary money so she could pay her rent on time."
       },
       {
         id: 5,
         part: "Part A",
         type: "Short Dialogue",
         script: [
-          { speaker: "Man", text: "Were you able to afford this month's rent?" },
-          { speaker: "Woman", text: "I did, and I have barely enough money to go through this week." },
-          { speaker: "Narrator", text: "What does the woman imply?" }
+          { speaker: "Woman", text: "Do you know where Debbie is?" },
+          { speaker: "Man", text: "Her purse is still here, so she must still be in the apartment." },
+          { speaker: "Narrator", text: "What does the man say about Debbie?" }
         ],
-        spokenQuestion: "What does the woman imply?",
+        spokenQuestion: "What does the man say about Debbie?",
         options: [
-          "A) She has plenty of money left over.",
-          "B) She paid the rent, leaving her with almost no money.",
-          "C) She was unable to pay her landlord.",
-          "D) She will borrow money to pay next month's rent."
+          "A) Debbie left her purse at the store.",
+          "B) Debbie has definitely left the building.",
+          "C) Debbie is probably somewhere in the apartment.",
+          "D) Debbie lost her purse inside the apartment."
         ],
-        correct: 1,
-        explanation: "She managed to pay rent, but now has 'barely enough money to go through this week'."
+        correct: 2,
+        explanation: "The logical deduction 'she must still be in the apartment' indicates high probability that she is still inside."
       },
       {
         id: 6,
         part: "Part A",
         type: "Short Dialogue",
         script: [
-          { speaker: "Woman", text: "I don't think we can finish this project today. Too many layers we haven't painted yet, and we are running out of the blue color too." },
-          { speaker: "Man", text: "I think we need a hand for this." },
+          { speaker: "Woman", text: "How did Chuck look when you visited him in the hospital?" },
+          { speaker: "Man", text: "He's looked better." },
           { speaker: "Narrator", text: "What does the man mean?" }
         ],
         spokenQuestion: "What does the man mean?",
         options: [
-          "A) They should stop working on the painting.",
-          "B) They need someone to assist or help them.",
-          "C) They should use a different color instead of blue.",
-          "D) They can finish the project by themselves today."
+          "A) Chuck was in great physical condition.",
+          "B) Chuck did not look very well.",
+          "C) Chuck looks better than anyone else.",
+          "D) Chuck was discharged from the hospital."
         ],
         correct: 1,
-        explanation: "'Need a hand' is an idiom meaning needing help or assistance from others."
+        explanation: "The idiom 'He has looked better' is an understated way of saying someone looks sickly or unwell."
       },
       {
         id: 7,
         part: "Part A",
         type: "Short Dialogue",
         script: [
-          { speaker: "Man", text: "We are expected to choose, but I think both candidates for supervisor are underqualified." },
-          { speaker: "Woman", text: "Me too." },
-          { speaker: "Narrator", text: "What does the woman mean?" }
+          { speaker: "Man", text: "Let me just get these last plates put away, then I'll be ready to go." },
+          { speaker: "Woman", text: "So you did do the dishes." },
+          { speaker: "Narrator", text: "What had the woman assumed?" }
         ],
-        spokenQuestion: "What does the woman mean?",
+        spokenQuestion: "What had the woman assumed?",
         options: [
-          "A) She wants to apply for supervisor herself.",
-          "B) She agrees that neither candidate has the right qualifications.",
-          "C) She has already selected her favorite candidate.",
-          "D) She believes both candidates are well qualified."
+          "A) She assumed he had already put away the dishes.",
+          "B) She assumed he hadn't done the dishes.",
+          "C) She thought he broke the dishes.",
+          "D) She wanted him to leave the plates out."
         ],
         correct: 1,
-        explanation: "The woman responds 'Me too', agreeing with the man's assessment that both candidates are underqualified."
+        explanation: "Her emphatic surprise 'So you did do the dishes' reveals she had previously assumed he had not washed them."
       },
       {
         id: 8,
         part: "Part A",
         type: "Short Dialogue",
         script: [
-          { speaker: "Woman", text: "Do we have any more shampoo?" },
-          { speaker: "Man", text: "We are run out of it, someone has to go to the store." },
-          { speaker: "Narrator", text: "What does the man mean?" }
+          { speaker: "Man", text: "What did the professor do in the first class? I missed it because I was late." },
+          { speaker: "Woman", text: "She outlined the course requirements." },
+          { speaker: "Narrator", text: "What does the woman mean?" }
         ],
-        spokenQuestion: "What does the man mean?",
+        spokenQuestion: "What does the woman mean?",
         options: [
-          "A) There is another bottle in the bathroom.",
-          "B) The store is out of shampoo.",
-          "C) They have exhausted their shampoo supply and must buy more.",
-          "D) He just bought shampoo yesterday."
+          "A) The professor gave a difficult test.",
+          "B) The professor summarized what is expected in the course.",
+          "C) The professor dismissed the class early.",
+          "D) The professor assigned the first reading."
         ],
-        correct: 2,
-        explanation: "'Run out of it' means the supply is completely depleted."
+        correct: 1,
+        explanation: "'Outlined the course requirements' means she presented a summary of what students must complete for the course."
       },
       {
         id: 9,
         part: "Part A",
         type: "Short Dialogue",
         script: [
-          { speaker: "Man", text: "Emily got her ticket to a concert in Vegas, and she has been looking like that all day." },
-          { speaker: "Woman", text: "She couldn't be happier." },
+          { speaker: "Man", text: "Help you find something?" },
+          { speaker: "Woman", text: "Yes, thank you. I need to get a new rug." },
           { speaker: "Narrator", text: "What does the woman mean?" }
         ],
         spokenQuestion: "What does the woman mean?",
         options: [
-          "A) Emily is extremely thrilled and overjoyed.",
-          "B) Emily is worried about going to Vegas.",
-          "C) Emily is disappointed with the concert ticket price.",
-          "D) Emily decided not to attend the show."
+          "A) She wants to clean her carpet.",
+          "B) She wants to purchase a floor covering.",
+          "C) She is looking for a lost rug.",
+          "D) She works at a department store."
         ],
-        correct: 0,
-        explanation: "'She couldn't be happier' indicates maximum possible happiness."
+        correct: 1,
+        explanation: "She is shopping to purchase a new rug (a floor covering)."
       },
       {
         id: 10,
         part: "Part A",
         type: "Short Dialogue",
         script: [
-          { speaker: "Woman", text: "Thank you for helping me move in, Chris." },
-          { speaker: "Man", text: "Well, we're neighbors now. Help me with dinner sometimes, and we're even." },
-          { speaker: "Narrator", text: "Where does this conversation probably take place?" }
-        ],
-        spokenQuestion: "Where does this conversation probably take place?",
-        options: [
-          "A) In a restaurant dining hall.",
-          "B) At an apartment building or residential neighborhood.",
-          "C) In a university lecture classroom.",
-          "D) At a grocery supermarket."
-        ],
-        correct: 1,
-        explanation: "Helping someone 'move in' and noting 'we're neighbors now' sets the scene at an apartment or home."
-      },
-      {
-        id: 11,
-        part: "Part A",
-        type: "Short Dialogue",
-        script: [
-          { speaker: "Man", text: "Were you pleased with last week's convention in Sydney?" },
-          { speaker: "Woman", text: "Nothing went as planned." },
+          { speaker: "Man", text: "Why are you so late getting here?" },
+          { speaker: "Woman", text: "Oh, I ran into my cousin Carl, and we stayed and talked for a while." },
           { speaker: "Narrator", text: "What does the woman mean?" }
         ],
         spokenQuestion: "What does the woman mean?",
         options: [
-          "A) The convention was completely successful.",
-          "B) The convention went poorly and encountered many issues.",
-          "C) She was unable to travel to Sydney.",
-          "D) She planned the convention herself."
+          "A) She was delayed because she met and spoke with a relative.",
+          "B) She had a car accident with her cousin.",
+          "C) She went for a run with Carl.",
+          "D) Carl prevented her from leaving the house."
+        ],
+        correct: 0,
+        explanation: "'Ran into my cousin Carl' means she unexpectedly met her cousin, and chatting caused her delay."
+      },
+
+      // PART B: Longer Conversation (Space Debris Q11 - Q14)
+      {
+        id: 11,
+        part: "Part B",
+        type: "Longer Conversation",
+        script: [
+          { speaker: "Woman", text: "Have you ever thought about all the tons of garbage that's out in space circling the Earth? ... tons of metal traveling at 17,000 miles per hour." },
+          { speaker: "Narrator", text: "What are the man and woman discussing?" }
+        ],
+        spokenQuestion: "What are the man and woman discussing?",
+        options: [
+          "A) Travel to Mars.",
+          "B) Trash and junk orbiting in outer space.",
+          "C) The speed of modern satellites.",
+          "D) The history of rocket manufacturing."
         ],
         correct: 1,
-        explanation: "'Nothing went as planned' means the event did not go smoothly and was unsatisfactory."
+        explanation: "Their dialogue centers on orbital debris, space trash, and junk circling the Earth."
       },
       {
         id: 12,
-        part: "Part A",
-        type: "Short Dialogue",
+        part: "Part B",
+        type: "Longer Conversation",
         script: [
-          { speaker: "Man", text: "Why does it feel like she didn't want to participate in this project, but changed her mind because I was in?" },
-          { speaker: "Woman", text: "Oh Joe, took you long enough." },
-          { speaker: "Narrator", text: "What does the woman mean?" }
+          { speaker: "Woman", text: "I saw a television program about it last night, and according to the program, there's about 3,000 tons of metal out there in space." },
+          { speaker: "Narrator", text: "Where did the woman learn about this problem?" }
         ],
-        spokenQuestion: "What does the woman mean?",
+        spokenQuestion: "Where did the woman learn about this problem?",
         options: [
-          "A) Joe arrived too late to join the team.",
-          "B) Joe took a very long time to realize something obvious.",
-          "C) The project was completed weeks ago.",
-          "D) She dislikes working with Joe."
+          "A) In an astronomy class.",
+          "B) On a television program the previous night.",
+          "C) From a space scientist.",
+          "D) In a newspaper article."
         ],
         correct: 1,
-        explanation: "'Took you long enough' means he took far too long to understand an obvious situation."
+        explanation: "She explicitly says she saw a television program about it the previous night."
       },
       {
         id: 13,
-        part: "Part A",
-        type: "Short Dialogue",
+        part: "Part B",
+        type: "Longer Conversation",
         script: [
-          { speaker: "Woman", text: "Sorry, I can't come with you, I'm feeling under the weather today." },
-          { speaker: "Man", text: "No problem. Do you have your medicine, or do you want me to grab some on my way home?" },
-          { speaker: "Narrator", text: "What does the man mean?" }
+          { speaker: "Woman", text: "...there's about 3,000 tons of metal out there in space, traveling at speeds around 17,000 miles per hour." },
+          { speaker: "Narrator", text: "Approximately how much metal is in orbit in space?" }
         ],
-        spokenQuestion: "What does the man mean?",
+        spokenQuestion: "Approximately how much metal is in orbit in space?",
         options: [
-          "A) He is also feeling ill today.",
-          "B) He offers to purchase and bring her medicine.",
-          "C) He insists she attend the event anyway.",
-          "D) He forgot his umbrella in the bad weather."
+          "A) 17,000 tons",
+          "B) 1957 pounds",
+          "C) About 3,000 tons",
+          "D) 300 tons"
         ],
-        correct: 1,
-        explanation: "He asks if she wants him to 'grab some [medicine] on my way home', offering to buy it for her."
+        correct: 2,
+        explanation: "She states there are 'about 3,000 tons of metal out there in space'."
       },
       {
         id: 14,
-        part: "Part A",
-        type: "Short Dialogue",
+        part: "Part B",
+        type: "Longer Conversation",
         script: [
-          { speaker: "Man", text: "Did you see Emily's name on the list of scholarship grantees?" },
-          { speaker: "Woman", text: "As expected from her, she had prepared herself for it." },
-          { speaker: "Narrator", text: "What does the woman mean?" }
+          { speaker: "Woman", text: "Hopefully, they'll be able to find solutions before the problem gets too much worse." },
+          { speaker: "Narrator", text: "What does the woman hope will happen?" }
         ],
-        spokenQuestion: "What does the woman mean?",
+        spokenQuestion: "What does the woman hope will happen?",
         options: [
-          "A) Emily's scholarship was an unexpected surprise.",
-          "B) Emily did not deserve the award.",
-          "C) Emily received the scholarship because she prepared thoroughly.",
-          "D) Emily refused the scholarship grant."
-        ],
-        correct: 2,
-        explanation: "'As expected from her, she had prepared herself for it' shows her award was expected due to diligent preparation."
-      },
-      {
-        id: 15,
-        part: "Part A",
-        type: "Short Dialogue",
-        script: [
-          { speaker: "Man", text: "Do you know anything about the final exam in chemistry tomorrow?" },
-          { speaker: "Woman", text: "It's going to be rather difficult, isn't it?" },
-          { speaker: "Narrator", text: "What does the woman mean?" }
-        ],
-        spokenQuestion: "What does the woman mean?",
-        options: [
-          "A) The chemistry exam will be straightforward.",
-          "B) She expects the exam will be quite challenging.",
-          "C) The exam date has been moved.",
-          "D) She will not take the chemistry exam."
+          "A) That space missions will be banned.",
+          "B) That scientists will find solutions before the problem worsens.",
+          "C) That more rockets will be launched.",
+          "D) That junk falls harmlessly into the ocean."
         ],
         correct: 1,
-        explanation: "She affirms that the exam is 'going to be rather difficult'."
+        explanation: "She hopes scientists studying the problem will discover effective solutions before collisions or damage worsen."
+      },
+
+      // PART C: Sociology Lecture (Term Paper Requirements Q15 - Q18)
+      {
+        id: 15,
+        part: "Part C",
+        type: "Academic Lecture",
+        script: [
+          { speaker: "Professor", text: "Before I start today's sociology lecture, I'd like to talk with you about the papers that you should be working on." },
+          { speaker: "Narrator", text: "When does this talk probably take place?" }
+        ],
+        spokenQuestion: "When does this talk probably take place?",
+        options: [
+          "A) At the end of the semester.",
+          "B) Before beginning a sociology lecture.",
+          "C) During library research hours.",
+          "D) After grading the papers."
+        ],
+        correct: 1,
+        explanation: "The professor begins by stating: 'Before I start today's sociology lecture, I'd like to talk with you...'"
       },
       {
         id: 16,
-        part: "Part A",
-        type: "Short Dialogue",
+        part: "Part C",
+        type: "Academic Lecture",
         script: [
-          { speaker: "Woman", text: "Mr. Parapio, it appears these books are one week late." },
-          { speaker: "Man", text: "Yeah, my bad. I forgot they were due to return last Friday." },
-          { speaker: "Narrator", text: "Who is the woman?" }
+          { speaker: "Professor", text: "The paper itself is due in two weeks, but I would like to see your outlines by Friday of this week..." },
+          { speaker: "Narrator", text: "When is the paper due?" }
         ],
-        spokenQuestion: "Who is the woman?",
+        spokenQuestion: "When is the paper due?",
         options: [
-          "A) A bookstore cashier",
-          "B) A librarian",
-          "C) A publishing agent",
-          "D) A university registrar"
+          "A) This Friday",
+          "B) In two weeks",
+          "C) At the end of next month",
+          "D) Tomorrow morning"
         ],
         correct: 1,
-        explanation: "Checking borrowed books that are overdue for return identifies her as a librarian."
+        explanation: "The outline is due this Friday, but the paper itself is due 'in two weeks'."
       },
       {
         id: 17,
-        part: "Part A",
-        type: "Short Dialogue",
+        part: "Part C",
+        type: "Academic Lecture",
         script: [
-          { speaker: "Man", text: "I got a dozen large eggs and five pounds of potatoes for only $3 in Fresh Market." },
-          { speaker: "Woman", text: "I don't know how that store makes money." },
-          { speaker: "Narrator", text: "What does the woman imply?" }
+          { speaker: "Professor", text: "I would like you to have at least three books and at least three recent journal articles as sources." },
+          { speaker: "Narrator", text: "What types of references should be used in writing the paper?" }
         ],
-        spokenQuestion: "What does the woman imply?",
+        spokenQuestion: "What types of references should be used in writing the paper?",
         options: [
-          "A) The store's prices are surprisingly cheap.",
-          "B) The eggs and potatoes were spoiled.",
-          "C) Fresh Market is closing soon.",
-          "D) She frequently shops at Fresh Market."
+          "A) Only internet websites",
+          "B) At least 3 books and at least 3 recent journal articles",
+          "C) Five encyclopedias",
+          "D) Interviews with police officers"
         ],
-        correct: 0,
-        explanation: "Wondering how the store makes money indicates that $3 for all that food is remarkably inexpensive."
+        correct: 1,
+        explanation: "The professor requires at least three books and at least three recent journal articles."
       },
       {
         id: 18,
-        part: "Part A",
-        type: "Short Dialogue",
+        part: "Part C",
+        type: "Academic Lecture",
         script: [
-          { speaker: "Woman", text: "Jimmy, you need to pick up the ingredients at the fresh store today. Martin is on his day off." },
-          { speaker: "Man", text: "There goes my plan of grabbing some coffee in the morning." },
-          { speaker: "Narrator", text: "What will the man probably do?" }
+          { speaker: "Professor", text: "The paper should be five pages long. In addition to the five pages of composition, you should have a title page, and a one-page reference list..." },
+          { speaker: "Narrator", text: "How many total pages should be in the paper, including the title page and the reference list?" }
         ],
-        spokenQuestion: "What will the man probably do?",
+        spokenQuestion: "How many total pages should be in the paper, including the title page and the reference list?",
         options: [
-          "A) Go grab morning coffee as planned.",
-          "B) Pick up the ingredients instead of having morning coffee.",
-          "C) Call Martin to work.",
-          "D) Take the day off."
-        ],
-        correct: 1,
-        explanation: "'There goes my plan' indicates he must sacrifice his coffee plan to run the errand for ingredients."
-      },
-      {
-        id: 19,
-        part: "Part A",
-        type: "Short Dialogue",
-        script: [
-          { speaker: "Man", text: "How was your trip to the Seven Magic Mountains?" },
-          { speaker: "Woman", text: "The place is a work of art." },
-          { speaker: "Narrator", text: "What does the woman mean?" }
-        ],
-        spokenQuestion: "What does the woman mean?",
-        options: [
-          "A) The destination was aesthetically magnificent.",
-          "B) The site was under construction.",
-          "C) She was disappointed by the view.",
-          "D) It was too crowded to visit."
-        ],
-        correct: 0,
-        explanation: "Calling a site 'a work of art' expresses high admiration for its artistic and scenic beauty."
-      },
-      {
-        id: 20,
-        part: "Part A",
-        type: "Short Dialogue",
-        script: [
-          { speaker: "Man", text: "I'd like to give you something you need the most right now, and I thought this is the one." },
-          { speaker: "Woman", text: "Oh, you have no idea what it means to me." },
-          { speaker: "Narrator", text: "What does the woman mean?" }
-        ],
-        spokenQuestion: "What does the woman mean?",
-        options: [
-          "A) She doesn't understand the gift's purpose.",
-          "B) She deeply appreciates and is touched by the gift.",
-          "C) She wants to exchange the gift.",
-          "D) She had already bought the same item."
-        ],
-        correct: 1,
-        explanation: "'You have no idea what it means to me' expresses deep appreciation and heartfelt gratitude."
-      },
-      {
-        id: 21,
-        part: "Part B",
-        type: "Longer Conversation",
-        script: [
-          { speaker: "Emily", text: "Hi Professor, did you get a minute? ... It's about the student exchange program. I have my heart set on Guatemala." },
-          { speaker: "Professor", text: "What draws you to Guatemala?" },
-          { speaker: "Narrator", text: "Why does the student go to see the professor?" }
-        ],
-        spokenQuestion: "Why does the student go to see the professor?",
-        options: [
-          "A) To complain about her research paper grade.",
-          "B) To discuss participating in the student exchange program to Guatemala.",
-          "C) To ask for a letter of recommendation for employment.",
-          "D) To request permission to drop her Spanish course."
-        ],
-        correct: 1,
-        explanation: "Emily visits her professor specifically to discuss her plan to join the student exchange program in Guatemala."
-      },
-      {
-        id: 22,
-        part: "Part B",
-        type: "Longer Conversation",
-        script: [
-          { speaker: "Emily", text: "Guatemala has the exact type of agricultural practices, economy, and environmental conditions I want to study and explore." },
-          { speaker: "Narrator", text: "Why does the student want to go to Guatemala?" }
-        ],
-        spokenQuestion: "Why does the student want to go to Guatemala?",
-        options: [
-          "A) She has relatives who reside there.",
-          "B) To study its agricultural practices, economy, and environmental conditions.",
-          "C) Because it is the least expensive program available.",
-          "D) To fulfill a required language minor."
-        ],
-        correct: 1,
-        explanation: "She explicitly states that Guatemala has the precise agricultural, economic, and environmental conditions relevant to her research."
-      },
-      {
-        id: 23,
-        part: "Part B",
-        type: "Longer Conversation",
-        script: [
-          { speaker: "Professor", text: "The exchange program to Guatemala is only for Spanish majors, and the Spanish department is usually strict about that." },
-          { speaker: "Narrator", text: "What makes the student may not be able to go to Guatemala?" }
-        ],
-        spokenQuestion: "What makes the student may not be able to go to Guatemala?",
-        options: [
-          "A) Her grade point average is below the requirement.",
-          "B) The exchange program is restricted solely to Spanish majors.",
-          "C) The program was canceled for the upcoming semester.",
-          "D) The university lacked funding for travel scholarships."
-        ],
-        correct: 1,
-        explanation: "The professor explains that the Guatemala exchange program is strictly reserved for Spanish majors."
-      },
-      {
-        id: 24,
-        part: "Part B",
-        type: "Longer Conversation",
-        script: [
-          { speaker: "Professor", text: "I think you should prepare some arguments for the Spanish department, just in case. Can you do that?" },
-          { speaker: "Emily", text: "Of course, I'll be ready for that. Thank you again, Professor." },
-          { speaker: "Narrator", text: "What will the student do after the conversation?" }
-        ],
-        spokenQuestion: "What will the student do after the conversation?",
-        options: [
-          "A) Change her major to Spanish.",
-          "B) Choose a different destination in Europe.",
-          "C) Prepare persuasive arguments for the Spanish department.",
-          "D) Purchase her flight tickets."
+          "A) 5 pages",
+          "B) 6 pages",
+          "C) 7 pages",
+          "D) 8 pages"
         ],
         correct: 2,
-        explanation: "The professor recommends preparing arguments to appeal to the Spanish department, and Emily agrees."
-      },
-      {
-        id: 25,
-        part: "Part C",
-        type: "Short Lecture",
-        script: [
-          { speaker: "Lecturer", text: "Many people know a certain movie with lots of balloons that can lift a house, but how many of you know that balloon was indeed the beginning of human trip through the air? Yes, you heard it right. Long before the gigantic machine we called the airplane, two brothers demonstrated their invention: the hot air balloon, in Annonay, France, in 1783." },
-          { speaker: "Narrator", text: "What does the speaker mainly discuss?" }
-        ],
-        spokenQuestion: "What does the speaker mainly discuss?",
-        options: [
-          "A) The plot of a modern animated movie.",
-          "B) The early history and invention of the hot air balloon.",
-          "C) The aerodynamics of modern commercial airplanes.",
-          "D) Tourism festivals in Annonay, France."
-        ],
-        correct: 1,
-        explanation: "The lecture introduces how human flight began with the Montgolfier brothers' hot air balloon in 1783."
+        explanation: "5 pages of composition + 1 title page + 1 reference list page = 7 total pages."
       }
     ];
 
+    // Estimated Scaled Scores (31 - 68) for 18 items
     const SCALED_MAP = [
-      31, 32, 33, 35, 37, 39, 41, 43, 45, 47,
-      49, 51, 53, 54, 56, 58, 60, 62, 63, 65,
-      66, 67, 67, 68, 68, 68
+      31, 33, 35, 38, 41, 44, 47, 50, 52, 55,
+      57, 60, 62, 64, 65, 66, 67, 68, 68
     ];
 
     let currentIndex = 0;
     const userAnswers = new Array(QUESTIONS.length).fill(null);
     const flaggedItems = new Array(QUESTIONS.length).fill(false);
-    let secondsLeft = 35 * 60;
+    let secondsLeft = 25 * 60;
     let examTimer = null;
     let isLocalAudioLoaded = false;
     let isMasterPlaying = false;
@@ -827,7 +689,6 @@
           audioElement.pause();
         }
       } else {
-        // Voice synthesizer fallback for full exam session
         if ('speechSynthesis' in window) {
           if (window.speechSynthesis.speaking) {
             window.speechSynthesis.cancel();
@@ -836,7 +697,7 @@
           } else {
             const allText = QUESTIONS.map(q => {
               const dlg = q.script.map(s => `${s.speaker}: ${s.text}`).join('. ');
-              return `Question ${q.id}. ${dlg}`;
+              return `Number ${q.id}. ${dlg}`;
             }).join('. ... Next question. ... ');
 
             const utter = new SpeechSynthesisUtterance(allText);
@@ -880,7 +741,7 @@
 
       document.getElementById('partBadge').textContent = q.part;
       document.getElementById('partTypeLabel').textContent = q.type;
-      document.getElementById('questionNumLabel').textContent = `Question ${q.id} of 25`;
+      document.getElementById('questionNumLabel').textContent = `Question ${q.id} of 18`;
 
       const optContainer = document.getElementById('optionsContainer');
       optContainer.innerHTML = '';
@@ -1103,7 +964,7 @@
     function restartExam() {
       userAnswers.fill(null);
       flaggedItems.fill(false);
-      secondsLeft = 35 * 60;
+      secondsLeft = 25 * 60;
 
       document.getElementById('resultsSection').classList.add('hidden');
       document.getElementById('testWorkspace').classList.remove('hidden');
